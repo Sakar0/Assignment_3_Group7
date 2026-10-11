@@ -1,0 +1,175 @@
+﻿@{
+    ViewData["Title"] = "Library Management System";
+}
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="row bg-light py-5 px-4 rounded mb-5">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 mb-3">
+                    <i class="bi bi-book me-3"></i> Library Management System
+                </h1>
+                <p class="fs-5 text-muted mb-4">Discover and search our collection of books, music, and toys</p>
+                <a href="@Url.Action("Index", "Search")" class="btn btn-primary btn-lg">
+                    <i class="bi bi-search me-2"></i> Start Searching
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Search Feature -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-search display-5 text-primary mb-3"></i>
+                    <h5 class="card-title">Free Search</h5>
+                    <p class="card-text text-muted">
+                        Search our catalog by name, library code, or item type. No login required.
+                    </p>
+                    <a href="@Url.Action("Index", "Search")" class="btn btn-outline-primary">
+                        Browse Catalog
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Feature -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-book display-5 text-info mb-3"></i>
+                    <h5 class="card-title">Books</h5>
+                    <p class="card-text text-muted">
+                        Explore our collection of books by author, genre, and availability status.
+                    </p>
+                    <a href="@Url.Action("Index", "Search", new { searchType = "Book" })" class="btn btn-outline-info">
+                        View Books
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music Feature -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-music-note display-5 text-success mb-3"></i>
+                    <h5 class="card-title">Music</h5>
+                    <p class="card-text text-muted">
+                        Discover music albums, artists, and release years in our music collection.
+                    </p>
+                    <a href="@Url.Action("Index", "Search", new { searchType = "Music" })" class="btn btn-outline-success">
+                        View Music
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toys Feature -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-puzzle display-5 text-warning mb-3"></i>
+                    <h5 class="card-title">Toys</h5>
+                    <p class="card-text text-muted">
+                        Browse our toy collection, perfect for children of all ages.
+                    </p>
+                    <a href="@Url.Action("Index", "Search", new { searchType = "Toy" })" class="btn btn-outline-warning">
+                        View Toys
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Responsive Feature -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-phone display-5 text-secondary mb-3"></i>
+                    <h5 class="card-title">Mobile Friendly</h5>
+                    <p class="card-text text-muted">
+                        Our search portal works perfectly on phones, tablets, and desktops.
+                    </p>
+                    <a href="@Url.Action("Index", "Search")" class="btn btn-outline-secondary">
+                        Try on Mobile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Public Access Feature -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <i class="bi bi-globe display-5 text-danger mb-3"></i>
+                    <h5 class="card-title">Public Access</h5>
+                    <p class="card-text text-muted">
+                        Browse and search our public catalog. No account needed.
+                    </p>
+                    <a href="@Url.Action("Index", "Search")" class="btn btn-outline-danger">
+                        Start Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action Section -->
+    <div class="row bg-primary text-white py-5 px-4 rounded">
+        <div class="col-12 text-center">
+            <h3 class="mb-3">Ready to explore our library?</h3>
+            <p class="fs-5 mb-4">
+                <i class="bi bi-info-circle me-2"></i>
+                Currently showing items in the system. Search and view details of any item.
+            </p>
+            <a href="@Url.Action("Index", "Search")" class="btn btn-light btn-lg">
+                <i class="bi bi-search me-2"></i> Search Now
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hero section enhancement */
+    .bg-light {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+
+    /* Card animations */
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Mobile responsive adjustments */
+    @@media (max-width: 576px) {
+        .display-4 {
+            font-size: 2rem;
+        }
+
+        .display-5 {
+            font-size: 1.75rem;
+        }
+
+        .btn-lg {
+            font-size: 0.95rem;
+            padding: 0.6rem 1.2rem;
+        }
+    }
+
+    /* Icon styling */
+    .bi {
+        font-size: 1.5rem;
+    }
+
+    .display-5 .bi {
+        font-size: 3rem;
+    }
+</style>

@@ -1,0 +1,361 @@
+@model List<Assignment2.LibraryManagement.Item>
+
+@{
+    ViewData["Title"] = "Search Library Catalog";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 mb-2">
+                <i class="bi bi-search me-2"></i> Library Search
+            </h1>
+            <p class="text-muted lead">Search our catalog of books, music, and toys</p>
+        </div>
+    </div>
+
+    <!-- Search Form Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form method="get" action="@Url.Action("Index", "Search")" class="row g-2 g-md-3">
+                        <!-- Name Search -->
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <label for="searchName" class="form-label fw-bold">Item Name</label>
+                            <input 
+                                type="text" 
+                                class="form-control form-control-lg" 
+                                id="searchName" 
+                                name="searchName" 
+                                placeholder="Search by title or name..."
+                                value="@ViewBag.SearchName"
+                                autocomplete="off"
+                                list="nameList">
+                            <datalist id="nameList">
+                                <!-- Populated by JavaScript if needed -->
+                            </datalist>
+                            <small class="text-muted d-block mt-1">Partial match supported</small>
+                        </div>
+
+                        <!-- Library Code Search -->
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <label for="searchCode" class="form-label fw-bold">Library Code</label>
+                            <input 
+                                type="text" 
+                                class="form-control form-control-lg" 
+                                id="searchCode" 
+                                name="searchCode" 
+                                placeholder="e.g., BOOK001..."
+                                value="@ViewBag.SearchCode"
+                                autocomplete="off"
+                                list="codeList">
+                            <datalist id="codeList">
+                                <!-- Populated by JavaScript if needed -->
+                            </datalist>
+                            <small class="text-muted d-block mt-1">Exact match</small>
+                        </div>
+
+                        <!-- Type Filter -->
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <label for="searchType" class="form-label fw-bold">Item Type</label>
+                            <select class="form-select form-select-lg" id="searchType" name="searchType">
+                                <option value="">-- All Types --</option>
+                                @if (ViewBag.SearchType == "Book")
+                                {
+                                    <option value="Book" selected>📚 Book</option>
+                                }
+                                else
+                                {
+                                    <option value="Book">📚 Book</option>
+                                }
+                                @if (ViewBag.SearchType == "Music")
+                                {
+                                    <option value="Music" selected>🎵 Music</option>
+                                }
+                                else
+                                {
+                                    <option value="Music">🎵 Music</option>
+                                }
+                                @if (ViewBag.SearchType == "Toy")
+                                {
+                                    <option value="Toy" selected>🧸 Toy</option>
+                                }
+                                else
+                                {
+                                    <option value="Toy">🧸 Toy</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Search Button -->
+                        <div class="col-12 col-md-6 col-lg-4 d-flex gap-2 align-items-end">
+                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                                <i class="bi bi-search me-2"></i> Search
+                            </button>
+                            <a href="@Url.Action("ClearFilters", "Search")" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Filters Display -->
+    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchName) || 
+         !string.IsNullOrWhiteSpace(ViewBag.SearchCode) || 
+         !string.IsNullOrWhiteSpace(ViewBag.SearchType))
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <strong>Active Filters:</strong>
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchName))
+                    {
+                        <span class="badge bg-info me-2">Name: @ViewBag.SearchName</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchCode))
+                    {
+                        <span class="badge bg-info me-2">Code: @ViewBag.SearchCode</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchType))
+                    {
+                        <span class="badge bg-info me-2">Type: @ViewBag.SearchType</span>
+                    }
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Results Count -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <p class="text-muted fs-5">
+                @if (ViewBag.ResultCount == 0)
+                {
+                    <span><i class="bi bi-inbox"></i> No items found matching your search.</span>
+                }
+                else if (ViewBag.ResultCount == 1)
+                {
+                    <span><i class="bi bi-check-circle"></i> <strong>1 item</strong> found</span>
+                }
+                else
+                {
+                    <span><i class="bi bi-check-circle"></i> <strong>@ViewBag.ResultCount items</strong> found</span>
+                }
+            </p>
+        </div>
+    </div>
+
+    <!-- Search Results Grid -->
+    @if (Model != null && Model.Count > 0)
+    {
+        <div class="row g-3 g-md-4">
+            @foreach (var item in Model)
+            {
+                <!-- Item Card -->
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                    <div class="card h-100 shadow-sm border-0 item-card">
+                        <!-- Card Header with Type Badge -->
+                        <div class="card-header bg-light border-bottom">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title mb-0 flex-grow-1">
+                                    @item.Name
+                                </h5>
+                                <span class="badge @GetTypeClass(item) ms-2 flex-shrink-0">
+                                    @GetItemType(item)
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <!-- Description -->
+                            @if (!string.IsNullOrWhiteSpace(item.Description))
+                            {
+                                <p class="card-text text-muted mb-3">
+                                    @item.Description
+                                </p>
+                            }
+
+                            <!-- Library Code -->
+                            <div class="mb-3 pb-3 border-bottom">
+                                <small class="text-muted d-block fw-bold">Library Code</small>
+                                <code class="fs-6 text-dark">@item.LibraryCode</code>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-3">
+                                <small class="text-muted d-block fw-bold">Status</small>
+                                <span class="badge @GetStatusClass(item.Status) fs-6 px-3 py-2">
+                                    @item.Status
+                                </span>
+                            </div>
+
+                            <!-- Type-Specific Details -->
+                            @if (item is Assignment2.LibraryManagement.Book book)
+                            {
+                                <div class="mb-2 pb-2 border-bottom">
+                                    <small class="text-muted d-block fw-bold">Author</small>
+                                    <p class="mb-0">@book.Author</p>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block fw-bold">Genre</small>
+                                    <p class="mb-0">@book.Genre</p>
+                                </div>
+                            }
+                            @if (item is Assignment2.LibraryManagement.Music music)
+                            {
+                                <div class="mb-2 pb-2 border-bottom">
+                                    <small class="text-muted d-block fw-bold">Artist</small>
+                                    <p class="mb-0">@music.Artist</p>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block fw-bold">Year</small>
+                                    <p class="mb-0">@music.Year</p>
+                                </div>
+                            }
+                            @if (item is Assignment2.LibraryManagement.Toy toy)
+                            {
+                                <div class="mb-2 pb-2 border-bottom">
+                                    <small class="text-muted d-block fw-bold">Toy Type</small>
+                                    <p class="mb-0">@toy.Type</p>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block fw-bold">Age Group</small>
+                                    <p class="mb-0">@toy.AgeGroup</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer bg-light border-top">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Read-only view
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (ViewBag.ResultCount == 0)
+    {
+        <!-- No Results Message -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h4 class="mt-4 text-muted">No items found</h4>
+                    <p class="text-muted mb-4">Try adjusting your search criteria</p>
+                    <a href="@Url.Action("ClearFilters", "Search")" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-clockwise me-2"></i> Clear Filters
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Helper Methods -->
+@functions {
+    private string GetItemType(Assignment2.LibraryManagement.Item item)
+    {
+        if (item is Assignment2.LibraryManagement.Book) return "Book";
+        if (item is Assignment2.LibraryManagement.Music) return "Music";
+        if (item is Assignment2.LibraryManagement.Toy) return "Toy";
+        return "Unknown";
+    }
+
+    private string GetTypeClass(Assignment2.LibraryManagement.Item item)
+    {
+        return GetItemType(item) switch
+        {
+            "Book" => "bg-primary",
+            "Music" => "bg-success",
+            "Toy" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Available" => "bg-success",
+            "Borrowed" => "bg-warning text-dark",
+            "Damaged" => "bg-danger",
+            "Destroy" => "bg-secondary",
+            _ => "bg-info"
+        };
+    }
+}
+
+<style>
+    .item-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        word-break: break-word;
+    }
+
+    .form-control-lg,
+    .form-select-lg,
+    .btn-lg {
+        font-size: 0.95rem;
+    }
+
+    /* Mobile adjustments */
+    @@media (max-width: 576px) {
+        .display-5 {
+            font-size: 1.75rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+        }
+
+        .form-control-lg,
+        .form-select-lg,
+        .btn-lg {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .badge {
+            font-size: 0.75rem !important;
+        }
+
+        .lead {
+            font-size: 1rem;
+        }
+    }
+
+    /* Tablet adjustments */
+    @@media (min-width: 768px) and (max-width: 1024px) {
+        .row.g-3 {
+            gap: 1.5rem;
+        }
+    }
+
+    /* Accessibility */
+    .form-control:focus,
+    .form-select:focus,
+    .btn:focus {
+        outline: 2px solid #0d6efd;
+        outline-offset: 2px;
+    }
+</style>
