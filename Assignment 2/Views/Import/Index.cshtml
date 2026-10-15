@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Import Catalogue";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-upload"></i> Bulk Import Catalogue Items
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Upload a CSV file to bulk import library items. The file will be validated and 
+                        any errors will be reported before items are added to the catalogue.
+                    </p>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h4 class="alert-heading">Error</h4>
+                            @foreach (var error in ViewData.ModelState.Values)
+                            {
+                                @foreach (var err in error.Errors)
+                                {
+                                    <p class="mb-2">@err.ErrorMessage</p>
+                                }
+                            }
+                        </div>
+                    }
+
+                    <form method="post" action="/Import/Upload" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">
+                                <strong>Select CSV File</strong>
+                            </label>
+                            <input type="file" 
+                                   class="form-control @(ViewData.ModelState.IsValid ? "" : "is-invalid")" 
+                                   id="file" 
+                                   name="file" 
+                                   accept=".csv" 
+                                   required>
+                            <div class="form-text">
+                                Maximum file size: 10 MB. Only .csv files are accepted.
+                            </div>
+                        </div>
+
+                        <div class="mb-3 p-3 bg-light border rounded">
+                            <h5 class="mb-2">CSV Format Requirements:</h5>
+                            <p class="mb-2"><strong>Your CSV file must have these columns:</strong></p>
+                            <ul class="mb-3">
+                                <li><code>Type</code> - Item type: Book, Music, or Toy (required)</li>
+                                <li><code>Name</code> - Item name (required)</li>
+                                <li><code>Description</code> - Item description (optional)</li>
+                                <li><code>LibraryCode</code> - Unique identifier (must be unique in library)</li>
+                                <li><code>Status</code> - One of: Available, Borrowed, Damaged, Destroy</li>
+                            </ul>
+
+                            <p class="mb-2"><strong>Additional columns required by item type:</strong></p>
+                            <ul class="mb-3">
+                                <li><strong>Book:</strong> <code>Author</code>, <code>Genre</code></li>
+                                <li><strong>Music:</strong> <code>Artist</code>, <code>Year</code> (must be a number)</li>
+                                <li><strong>Toy:</strong> <code>ToyType</code>, <code>AgeGroup</code></li>
+                            </ul>
+
+                            <p class="mb-2"><strong>Important:</strong> Ensure your CSV file contains the exact column headers shown above. The import will fail if required columns are missing or if the data does not match the required format.</p>
+
+                            <a href="/files/sample_import.csv" class="btn btn-sm btn-outline-info mt-2">
+                                <i class="bi bi-download"></i> Download Sample CSV
+                            </a>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Upload and Import
+                            </button>
+                            <a href="/" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+    }
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    code {
+        background-color: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+</style>
