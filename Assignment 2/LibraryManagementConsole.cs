@@ -1,5 +1,6 @@
 using System;
 using Assignment2.LibraryManagement;
+using Assignment2.Tests;
 
 namespace Assignment2
 {
@@ -32,6 +33,13 @@ namespace Assignment2
             if (args.Length > 0 && args[0] == "web")
             {
                 WebAppStartup.RunWebApp(args);
+                return;
+            }
+
+            // Check if test suite should run
+            if (args.Length > 0 && args[0] == "test")
+            {
+                ImportServiceTests.RunTests();
                 return;
             }
 

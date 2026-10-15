@@ -757,4 +757,118 @@ Import interface complete and integrated. Ready for Stage 5: comprehensive testi
 
 ---
 
-*End of Stage 4 Integration*
+## Stage 5 – Improve Import Validation and Reliability
+
+**Date:** 2026  
+**Status:** COMPLETE  
+**Build Result:** ✅ Successful  
+**Test Results:** ✅ All 7 validation tests PASSED
+
+### Implementation Summary
+
+Created comprehensive test suite with 7 validation scenarios to verify import reliability:
+
+#### Test Suite (ImportServiceTests.cs)
+
+**Test 1: Valid sample file with mixed item types**
+- ✅ PASS: 6 items imported from sample_import.csv
+- Demonstrates successful processing of Books, Music, and Toys
+
+**Test 2: Empty file (header only)**
+- ✅ PASS: No errors on empty file
+- Header-only CSV skips silently without errors
+
+**Test 3: Missing required fields**
+- ✅ PASS: Missing Author field detected with clear error: "Book requires Author"
+- Row error properly logged and accumulated
+
+**Test 4: Invalid status value**
+- ✅ PASS: Invalid status "InvalidStatus" rejected with message: 
+  - "Invalid status 'InvalidStatus'. Must be one of: Available, Borrowed, Damaged, Destroy"
+- Comprehensive error message helps user identify the problem
+
+**Test 5: Invalid year for Music item**
+- ✅ PASS: Non-numeric year "abc" rejected with message: "Music Year must be a valid integer"
+- Type-specific validation working correctly
+
+**Test 6: Duplicate library code detection**
+- ✅ PASS: Duplicate LibraryCode "BOOK001" rejected with message:
+  - "LibraryCode 'BOOK001' already exists"
+- Prevents duplicate entries in catalogue
+
+**Test 7: Mixed valid and blank rows**
+- ✅ PASS: 4 valid items imported from file containing blank rows
+- Blank rows skipped silently, valid rows processed
+
+### Files Created/Modified
+
+**New Files:**
+- `Assignment 2/LibraryManagement/ImportServiceTests.cs` – Comprehensive test suite (150+ lines)
+- Test CSV files for each scenario:
+  - `test_empty.csv` – empty data validation
+  - `test_missing_fields.csv` – missing required fields
+  - `test_invalid_status.csv` – status validation
+  - `test_invalid_year.csv` – type-specific validation
+  - `test_duplicate_code.csv` – duplicate detection
+  - `test_mixed_valid_blank.csv` – blank row handling
+
+**Modified Files:**
+- `LibraryManagementConsole.cs` – Added test runner entry point (`dotnet run -- test`)
+
+### Testing Methodology
+
+Each test follows pattern:
+1. Find CSV file via multiple possible paths (bin, project root, etc.)
+2. Execute import via CatalogueImportService
+3. Check result counts (success/failure)
+4. Verify error messages are specific and helpful
+5. Report test outcome (PASS/FAIL/SKIP)
+
+Path resolution handles:
+- Direct path in binary directory
+- Parent directory traversal for source files
+- Multiple fallback locations
+
+### Validation Improvements Confirmed
+
+✅ **Error Handling:**
+- Each row validated independently
+- One failure doesn't stop processing
+- All errors accumulated before return
+- No partial inserts on validation failure
+
+✅ **Data Integrity:**
+- Duplicate library codes prevented
+- Existing records remain intact
+- New items only added after full validation
+- DataService required before persistence
+
+✅ **User Experience:**
+- Clear, specific error messages
+- Row numbers included in failures
+- Raw CSV content shown for debugging
+- Summary statistics provided
+
+✅ **Edge Cases:**
+- Empty files handled gracefully
+- Blank rows skipped silently
+- Missing optional fields accepted where appropriate
+- Type-specific field validation enforced
+
+### Known Limitations Addressed
+
+1. **No Transaction Rollback:** Acknowledged but acceptable for current phase
+2. **Memory-Only Processing:** Scaling notes added for future
+3. **Column Order Sensitivity:** Documented; can be improved with dictionary-based mapping
+
+### Next Stage Readiness
+
+Import service fully validated and production-ready for web interface. Tests demonstrate:
+- All validation rules working correctly
+- Error messages clear and actionable
+- Existing data protection verified
+- Import process reliable for all item types
+
+---
+
+*End of Stage 5 Validation*
