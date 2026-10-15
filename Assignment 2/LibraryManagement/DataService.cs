@@ -9,7 +9,7 @@ namespace Assignment2.LibraryManagement
 {
     /// <summary>
     /// Service for persisting and loading all library data to/from JSON files
-    /// Handles serialization of Items (Book, Music, Toy), Borrowers, and BorrowRecords
+    /// Handles serialization of Items (Book, Music, Toy), Borrowers, BorrowRecords, LibraryBranches, and LibraryTransfers
     /// Uses System.Text.Json with custom converters for polymorphic types
     /// </summary>
     public static class DataService
@@ -19,6 +19,8 @@ namespace Assignment2.LibraryManagement
         private static readonly string ItemsFilePath = Path.Combine(DataDirectory, "items.json");
         private static readonly string BorrowersFilePath = Path.Combine(DataDirectory, "borrowers.json");
         private static readonly string BorrowRecordsFilePath = Path.Combine(DataDirectory, "borrow_records.json");
+        private static readonly string BranchesFilePath = Path.Combine(DataDirectory, "branches.json");
+        private static readonly string TransfersFilePath = Path.Combine(DataDirectory, "transfers.json");
 
         // JSON serializer options with custom converters
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
@@ -55,6 +57,14 @@ namespace Assignment2.LibraryManagement
                 // Save borrow records
                 SaveBorrowRecords();
                 Console.WriteLine($"✓ Borrow records saved to {BorrowRecordsFilePath}");
+
+                // Save branches
+                SaveBranches();
+                Console.WriteLine($"✓ Branches saved to {BranchesFilePath}");
+
+                // Save transfers
+                SaveTransfers();
+                Console.WriteLine($"✓ Transfers saved to {TransfersFilePath}");
 
                 Console.WriteLine("\n✓ All data saved successfully!");
                 return true;
@@ -102,6 +112,20 @@ namespace Assignment2.LibraryManagement
                 {
                     LoadBorrowRecords();
                     Console.WriteLine($"✓ Borrow records loaded from {BorrowRecordsFilePath}");
+                }
+
+                // Load branches
+                if (File.Exists(BranchesFilePath))
+                {
+                    LoadBranches();
+                    Console.WriteLine($"✓ Branches loaded from {BranchesFilePath}");
+                }
+
+                // Load transfers
+                if (File.Exists(TransfersFilePath))
+                {
+                    LoadTransfers();
+                    Console.WriteLine($"✓ Transfers loaded from {TransfersFilePath}");
                 }
 
                 Console.WriteLine("\n✓ All data loaded successfully!");
@@ -320,5 +344,117 @@ namespace Assignment2.LibraryManagement
                 return false;
             }
         }
+
+        /// <summary>
+        /// Save all branches to branches.json file
+        /// </summary>
+        private static void SaveBranches()
+        {
+            try
+            {
+                string json = JsonSerializer.Serialize(LibraryBranch.AllBranches, JsonOptions);
+                File.WriteAllText(BranchesFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Error saving branches: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Load all branches from branches.json file
+        /// Clears existing collection before loading
+        /// </summary>
+        private static void LoadBranches()
+        {
+            try
+            {
+                if (!File.Exists(BranchesFilePath))
+                    return;
+
+                LibraryBranch.AllBranches.Clear();
+                string json = File.ReadAllText(BranchesFilePath);
+                var branches = JsonSerializer.Deserialize<List<LibraryBranch>>(json, JsonOptions);
+
+                if (branches != null)
+                {
+                    foreach (var branch in branches)
+                    {
+                        LibraryBranch.AllBranches.Add(branch);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Error loading branches: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Check if there is saved data for branches
+        /// </summary>
+        public static bool HasSavedBranches()
+        {
+            return File.Exists(BranchesFilePath);
+        }
+
+        /// <summary>
+        /// Save transfers collection to JSON file
+        /// </summary>
+        private static void SaveTransfers()
+        {
+            string json = JsonSerializer.Serialize(LibraryTransfer.AllTransfers, JsonOptions);
+            File.WriteAllText(TransfersFilePath, json);
+        }
+
+        /// <summary>
+        /// Load transfers collection from JSON file
+        /// </summary>
+        private static void LoadTransfers()
+        {
+            try
+            {
+                if (!File.Exists(TransfersFilePath))
+                    return;
+
+                LibraryTransfer.AllTransfers.Clear();
+                string json = File.ReadAllText(TransfersFilePath);
+                var transfers = JsonSerializer.Deserialize<List<LibraryTransfer>>(json, JsonOptions);
+
+                if (transfers != null)
+                {
+                    foreach (var transfer in transfers)
+                    {
+                        LibraryTransfer.AllTransfers.Add(transfer);
+                    }
+
+                    // Reinitialize transfer ID counter based on highest existing ID
+                    var maxTransferId = transfers
+                        .Select(t => t.TransferId)
+                        .Where(id => id.StartsWith("TR") && int.TryParse(id.Substring(2), out _))
+                        .Select(id => int.Parse(id.Substring(2)))
+                        .DefaultIfEmpty(0)
+                        .Max();
+
+                    if (maxTransferId > 0)
+                    {
+                        TransferService.ResetTransferIdCounter(maxTransferId + 1);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Error loading transfers: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Check if there is saved data for transfers
+        /// </summary>
+        public static bool HasSavedTransfers()
+        {
+            return File.Exists(TransfersFilePath);
+        }
     }
 }
+

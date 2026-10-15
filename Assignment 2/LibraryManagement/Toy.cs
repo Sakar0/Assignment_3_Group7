@@ -2,7 +2,7 @@ namespace Assignment2.LibraryManagement
 {
     /// <summary>
     /// Toy class - a type of item in the library
-    /// Inherits from Item (gets Name, Description, LibraryCode, Status)
+    /// Inherits from Item (gets Name, Description, LibraryCode, Status, BranchId)
     /// Adds toy-specific properties: Type and AgeGroup
     /// </summary>
     public class Toy : Item
@@ -15,8 +15,8 @@ namespace Assignment2.LibraryManagement
         /// Parameters are passed to the Item base class, then Type and AgeGroup are set
         /// </summary>
         public Toy(string name, string description, string libraryCode, string status, 
-                   string type, string ageGroup)
-            : base(name, description, libraryCode, status)
+                   string type, string ageGroup, string branchId = "DEFAULT")
+            : base(name, description, libraryCode, status, branchId)
         {
             Type = type;
             AgeGroup = ageGroup;

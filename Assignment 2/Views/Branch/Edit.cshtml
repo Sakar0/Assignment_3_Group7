@@ -1,0 +1,93 @@
+@model Assignment2.Controllers.BranchViewModel
+
+@{
+    ViewData["Title"] = "Edit Branch";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">Edit Library Branch: @Model.BranchId</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="@Url.Action("Edit", new { id = Model.BranchId })">
+                        @Html.AntiForgeryToken()
+
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <h5>Validation Error</h5>
+                                <ul>
+                                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="BranchId" class="form-label">Branch ID</label>
+                            <input type="text" class="form-control" id="BranchId" name="BranchId" 
+                                   value="@Model.BranchId" disabled>
+                            <input type="hidden" name="BranchId" value="@Model.BranchId">
+                            <small class="form-text text-muted">Branch ID cannot be changed</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="BranchName" class="form-label">Branch Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @(ViewData.ModelState.ContainsKey("BranchName") && ViewData.ModelState["BranchName"].Errors.Any() ? "is-invalid" : "")" 
+                                   id="BranchName" name="BranchName" placeholder="e.g., Downtown Library, Campus Branch" 
+                                   value="@Model.BranchName" required maxlength="200">
+                            <small class="form-text text-muted">Descriptive name of the branch</small>
+                            @if (ViewData.ModelState.ContainsKey("BranchName") && ViewData.ModelState["BranchName"].Errors.Any())
+                            {
+                                <div class="invalid-feedback d-block">
+                                    @ViewData.ModelState["BranchName"].Errors.First().ErrorMessage
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Location" class="form-label">Location <span class="text-danger">*</span></label>
+                            <textarea class="form-control @(ViewData.ModelState.ContainsKey("Location") && ViewData.ModelState["Location"].Errors.Any() ? "is-invalid" : "")" 
+                                      id="Location" name="Location" rows="4" placeholder="Full address, contact info, and hours" 
+                                      required maxlength="500">@Model.Location</textarea>
+                            <small class="form-text text-muted">Physical address, phone number, and operating hours</small>
+                            @if (ViewData.ModelState.ContainsKey("Location") && ViewData.ModelState["Location"].Errors.Any())
+                            {
+                                <div class="invalid-feedback d-block">
+                                    @ViewData.ModelState["Location"].Errors.First().ErrorMessage
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="IsActive" class="form-label">Status</label>
+                            <input type="text" class="form-control" id="IsActive" 
+                                   value="@(Model.IsActive ? "Active" : "Inactive")" disabled>
+                            <small class="form-text text-muted">
+                                Use the "Deactivate" or "Reactivate" button on the branch list to change status
+                            </small>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Branch</button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 10px;
+    }
+</style>

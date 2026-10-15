@@ -1,0 +1,135 @@
+@model List<Assignment2.LibraryManagement.LibraryBranch>
+
+@{
+    ViewData["Title"] = "Branch Management";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Library Branches</h1>
+            <p class="text-muted">Manage physical library branches</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("Create")" class="btn btn-primary">
+                <i class="icon">+</i> Create New Branch
+            </a>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage) || TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @(TempData["SuccessMessage"] ?? ViewBag.SuccessMessage)
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Warning Message -->
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["WarningMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Error Message -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info">
+            <p>No branches found. <a href="@Url.Action("Create")">Create the first branch</a>.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Branch ID</th>
+                        <th>Branch Name</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var branch in Model)
+                    {
+                        <tr class="@(branch.IsActive ? "" : "table-secondary")">
+                            <td>
+                                <code>@branch.BranchId</code>
+                            </td>
+                            <td>
+                                <strong>@branch.BranchName</strong>
+                            </td>
+                            <td>
+                                @branch.Location
+                            </td>
+                            <td>
+                                @if (branch.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                @branch.CreatedDate.ToString("g")
+                            </td>
+                            <td>
+                                <a href="@Url.Action("Edit", new { id = branch.BranchId })" class="btn btn-sm btn-warning">
+                                    Edit
+                                </a>
+
+                                @if (branch.IsActive)
+                                {
+                                    <form method="post" action="@Url.Action("Deactivate")" style="display: inline;">
+                                        <input type="hidden" name="id" value="@branch.BranchId" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                                            Deactivate
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" action="@Url.Action("Reactivate")" style="display: inline;">
+                                        <input type="hidden" name="id" value="@branch.BranchId" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            Reactivate
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<style>
+    .icon {
+        margin-right: 5px;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+</style>
