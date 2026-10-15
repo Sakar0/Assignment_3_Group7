@@ -16,6 +16,12 @@
 **Status:** COMPLETE  
 **Build Result:** ✅ Successful
 
+## Stage 2 – Plan the Importer and Analytics Design
+
+**Date:** 2026  
+**Status:** COMPLETE  
+**Build Result:** ✅ Successful (no changes, verification only)
+
 ### Project Overview
 
 The existing project is an **ASP.NET Core MVC library management system** (.NET 10) with:
@@ -319,10 +325,217 @@ Toy,Lego Set,Building toy,TOY001,Available,,,,,Building Blocks,4-12
 
 ---
 
-## Next Steps
+### Key ManagerService Findings
 
-**Stage 2:** Detail the CSV importer design and analytics calculations, finalize column mappings and report structure.
+Inspected full `ManagerService.cs` which provides **reusable statistics methods** already designed to support analytics:
+
+**Available Statistics Classes:**
+- `BorrowingStatistics` – currently borrowed count, total borrows, top 5 most borrowed items
+- `ItemStatusStatistics` – counts by status (Available, Borrowed, Damaged, Destroy), total items, percentage breakdown
+- `FineStatistics` – total fines collected, late return count, average fine, overdue items, current overdue amount
+- `LibraryStatistics` – comprehensive wrapper containing all above stats
+
+**Key Methods (Non-Console):**
+- `GetBorrowingStatistics()` → returns structured data (not Console output)
+- `GetItemStatusStatistics()` → returns structured data
+- `GetFineStatistics()` → returns structured data
+- `GetComprehensiveStatistics()` → returns all statistics in one call
+
+**Insight:** ManagerService already has perfect separation! The `Get*Statistics()` methods return domain objects that can be passed directly to web views; the `Display*Statistics()` methods are console-specific and can be ignored.
+
+### AdminService Detailed Analysis
+
+- **Duplicate Detection:** `LibraryCodeExists(string libraryCode)` – perfect foundation for importer validation
+- **Create Methods:** `CreateBook()`, `CreateMusic()`, `CreateToy()` – returns bool, validates status, catches ArgumentException
+- **Update Methods:** `UpdateItem()` by property name
+- **Search Methods:** `FindByLibraryCode()`, `SearchByName()`
+- **All methods write to Console** – for importer, we'll need to either suppress output or create a parallel non-console API
 
 ---
 
-*End of Stage 1 Inspection*
+## Stage 2 Detailed Design
+
+### CSV Importer Specification
+
+**CSV Format and Column Mapping:**
+
+Proposed CSV structure with type-aware optional columns:
+
+```csv
+Type,Name,Description,LibraryCode,Status,Author,Genre,Artist,Year,ToyType,AgeGroup
+Book,"The Hobbit","Fantasy adventure in Middle-earth",BOOK001,Available,"J.R.R. Tolkien","Fantasy",,,,
+Music,"Abbey Road","The Beatles iconic album",MUSIC001,Available,,,"The Beatles",1969,,
+Toy,"LEGO Classic","Building blocks set",TOY001,Available,,,,,Building Blocks,4-12
+```
+
+**Validation Rules (Per Row):**
+1. **Required fields (all types):**
+   - `Type` ∈ {Book, Music, Toy}
+   - `Name` – non-empty, max 255 chars
+   - `LibraryCode` – non-empty, unique (checked against Item.AllItems)
+   - `Status` ∈ {Available, Borrowed, Damaged, Destroy}
+   - `Description` – optional
+
+2. **Type-Specific Validations:**
+   - **Book:** Requires `Author` and `Genre` (non-empty)
+   - **Music:** Requires `Artist` (non-empty) and `Year` (valid integer, e.g., 1900–2100)
+   - **Toy:** Requires `ToyType` (called "Type" in model) and `AgeGroup` (non-empty)
+
+3. **Error Handling:**
+   - Skip blank rows silently
+   - Log invalid rows with line number and specific field error
+   - Do NOT insert partial records
+   - Accumulate all validation errors before displaying summary
+
+**Import Result Structure:**
+```
+ImportResult
+├── SuccessCount: int
+├── FailureCount: int
+├── ImportedItems: List<Item>
+└── FailedRows: List<ImportError>
+    ├── RowNumber: int
+    ├── RawContent: string
+    └── ErrorMessage: string
+```
+
+### Analytics Dashboard Specification
+
+**Dashboard Metrics (Using ManagerService):**
+
+1. **Catalogue Overview:**
+   ```
+   Total Items:        125
+   Books:              45   (36%)
+   Music:              50   (40%)
+   Toys:               30   (24%)
+   ```
+
+2. **Item Status Distribution:**
+   ```
+   Available:          95   (76%) [Green bar]
+   Borrowed:           20   (16%) [Yellow bar]
+   Damaged:            8    (6%)  [Red bar]
+   Marked for Destroy: 2    (2%)  [Dark Red bar]
+   ```
+
+3. **Borrowing Activity:**
+   ```
+   Currently Borrowed:  20 items
+   Total Transactions:  150 borrows
+   Most Borrowed Item:  [Top 5 list]
+   ```
+
+4. **Fine Statistics:**
+   ```
+   Total Fines Collected:   $245.50
+   Overdue Items:           5
+   Current Overdue Amount:  $8.00
+   Late Return Rate:        12.5%
+   ```
+
+5. **Detailed Analytics (By Type):**
+   - Books by Genre (count)
+   - Music by Artist (count)
+   - Toys by Age Group (count)
+
+**Dashboard Access:**
+- New route: `/Analytics/Dashboard` or `/Manager/Analytics`
+- New controller: `AnalyticsController` (or extend existing pattern)
+- New view: `Views/Analytics/Dashboard.cshtml`
+
+### CSV and PDF Export Specification
+
+**CSV Export Schema:**
+```
+Report Type,Report Date,Total Items,Available,Borrowed,Damaged,Destroy,...
+Manager Analytics,2026-01-15,125,95,20,8,2,...
+```
+
+Export logic:
+- Generate CSV using built-in StringBuilder or lightweight CsvHelper (if justified)
+- Escape quotes, commas, newlines per RFC 4180
+- Include report metadata (generation date, exported by, etc.)
+- Support filtered exports (e.g., only books, only overdue items)
+
+**PDF Export Approach:**
+Options evaluated:
+1. **QuestPDF** – lightweight, free, .NET 10 compatible, no external dependencies
+2. **SelectPdf** – paid/trial
+3. **iText** – complex, licensing
+4. **HTML-to-PDF (NReco)** – simple but requires HTML generation
+
+**Decision:** Defer final choice to implementation stage; evaluate if QuestPDF adds acceptable overhead.
+
+---
+
+## Integration Architecture
+
+### No Breaking Changes
+- Existing Item, AdminService, DataService unchanged
+- New AnalyticsController, ImportController separate
+- New ServiceLayer:
+  - `CatalogueImportService` – handles CSV processing
+  - `ReportExportService` – handles CSV/PDF generation
+  - Dashboard uses existing `ManagerService` for calculations
+
+### Data Flow
+```
+CSV File → [ImportService validates] → [AdminService.Create*] → [DataService.SaveAllData()]
+           ↓
+        Item.AllItems (updated)
+           ↓
+        [ManagerService.Get*Statistics] ← [AnalyticsController queries]
+           ↓
+        Dashboard View displays metrics
+           ↓
+        ExportService transforms to CSV/PDF
+           ↓
+        File download
+```
+
+### Authorization Consideration
+**Current State:** No web authorization configured.  
+**Approach:** Create `[Authorize]` attributes on controller actions as placeholders; document that admin/manager authentication should be configured separately or controllers placed behind reverse proxy/auth layer.
+
+---
+
+## Risk Assessment and Mitigations
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|-----------|
+| CSV parsing errors corrupt data | Medium | High | Validate entire batch before persist; use try-catch; preserve existing items |
+| Duplicate library codes allow duplicates | Medium | High | Check `AdminService.LibraryCodeExists()` before insert; reject row if duplicate |
+| Large CSV files cause memory issue | Low | Medium | Implement file size check (e.g., max 10 MB); stream if needed later |
+| Type-specific field validation fails | Medium | Medium | Per-type validation logic; clear error messages |
+| PDF export bloats project size | Low | Low | Use lightweight library; defer if not critical |
+| Console output pollutes import results | Medium | Low | Create non-console overload of AdminService or suppress output |
+| Existing JSON data loss on save failure | Low | Critical | Backup before save; verify write success; atomic operations where possible |
+
+---
+
+## Known Limitations (Design Phase)
+
+1. **No Authentication/Authorization:** Existing app has no role enforcement; admin/manager features will be accessible to all users until auth is added project-wide.
+2. **In-Memory Data:** Static collections mean no data persistence during app crash; reliant on DataService.SaveAllData() calls.
+3. **CSV Column Order Matters:** Importer expects exact column headers; will fail if headers are reordered (can be improved later with dictionary-based parsing).
+4. **No Transaction Rollback:** If import partially succeeds and then save fails, some items remain in memory but not persisted.
+
+---
+
+## Summary and Readiness
+
+**Stage 2 Analysis Complete:**
+- ✅ CSV column mapping finalized
+- ✅ Analytics data structures confirmed (reuse ManagerService outputs)
+- ✅ Export approaches evaluated
+- ✅ Integration points identified
+- ✅ Risks documented
+- ✅ No breaking changes required
+
+**Recommendation for Stage 3:**
+Proceed to implement **CatalogueImportService** with full validation and error reporting.
+
+---
+
+*End of Stage 2 Planning*
