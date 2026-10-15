@@ -11,6 +11,29 @@ namespace Assignment2.Tests
     /// </summary>
     public class ImportServiceTests
     {
+        private static string ResolveFixture(string fileName)
+        {
+            var directory = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            while (directory != null && !File.Exists(Path.Combine(directory.FullName, "Assignment 2.csproj")))
+            {
+                directory = directory.Parent;
+            }
+
+            if (directory != null)
+            {
+                foreach (string folder in new[] { directory.FullName, Path.Combine(directory.FullName, "Assignment 2") })
+                {
+                    string candidate = Path.Combine(folder, fileName);
+                    if (File.Exists(candidate))
+                    {
+                        return candidate;
+                    }
+                }
+            }
+
+            throw new FileNotFoundException($"Test fixture '{fileName}' not found from {AppDomain.CurrentDomain.BaseDirectory}.");
+        }
+
         public static void RunTests()
         {
             Console.WriteLine("\n=== Catalogue Import Service Test Suite ===\n");
@@ -49,20 +72,7 @@ namespace Assignment2.Tests
         private static void TestSampleFile()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sample_import.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "sample_import.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "sample_import.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Sample file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("sample_import.csv");
             int initialCount = Item.AllItems.Count;
             var result = service.ImportFromCsv(filePath);
 
@@ -83,20 +93,7 @@ namespace Assignment2.Tests
         private static void TestEmptyFile()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test_empty.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "test_empty.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "test_empty.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Test file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("test_empty.csv");
             var result = service.ImportFromCsv(filePath);
             Console.WriteLine($"  ✓ Successes: {result.SuccessCount}");
             Console.WriteLine($"  ✗ Failures: {result.FailureCount}");
@@ -115,20 +112,7 @@ namespace Assignment2.Tests
         private static void TestMissingFields()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test_missing_fields.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "test_missing_fields.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "test_missing_fields.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Test file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("test_missing_fields.csv");
             var result = service.ImportFromCsv(filePath);
             Console.WriteLine($"  ✓ Successes: {result.SuccessCount}");
             Console.WriteLine($"  ✗ Failures: {result.FailureCount}");
@@ -146,20 +130,7 @@ namespace Assignment2.Tests
         private static void TestInvalidStatus()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test_invalid_status.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "test_invalid_status.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "test_invalid_status.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Test file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("test_invalid_status.csv");
             var result = service.ImportFromCsv(filePath);
             Console.WriteLine($"  ✓ Successes: {result.SuccessCount}");
             Console.WriteLine($"  ✗ Failures: {result.FailureCount}");
@@ -173,20 +144,7 @@ namespace Assignment2.Tests
         private static void TestInvalidYear()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test_invalid_year.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "test_invalid_year.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "test_invalid_year.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Test file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("test_invalid_year.csv");
             var result = service.ImportFromCsv(filePath);
             Console.WriteLine($"  ✓ Successes: {result.SuccessCount}");
             Console.WriteLine($"  ✗ Failures: {result.FailureCount}");
@@ -200,20 +158,7 @@ namespace Assignment2.Tests
         private static void TestDuplicateCode()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test_duplicate_code.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "test_duplicate_code.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "test_duplicate_code.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Test file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("test_duplicate_code.csv");
             var result = service.ImportFromCsv(filePath);
             Console.WriteLine($"  ✓ Successes: {result.SuccessCount}");
             Console.WriteLine($"  ✗ Failures: {result.FailureCount}");
@@ -227,20 +172,7 @@ namespace Assignment2.Tests
         private static void TestMixedValidBlank()
         {
             var service = new CatalogueImportService();
-            string[] possiblePaths = new[]
-            {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "test_mixed_valid_blank.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "test_mixed_valid_blank.csv"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "test_mixed_valid_blank.csv"),
-            };
-
-            string filePath = possiblePaths.FirstOrDefault(p => File.Exists(p));
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Console.WriteLine("  [SKIP] Test file not found");
-                return;
-            }
-
+            string filePath = ResolveFixture("test_mixed_valid_blank.csv");
             int initialCount = Item.AllItems.Count;
             var result = service.ImportFromCsv(filePath);
 

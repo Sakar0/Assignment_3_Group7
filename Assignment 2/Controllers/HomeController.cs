@@ -11,6 +11,8 @@ namespace Assignment2.Controllers
             return View();
         }
 
+        [Route("/Privacy")]
+        [Route("Home/Privacy")]
         public IActionResult Privacy()
         {
             return View();
