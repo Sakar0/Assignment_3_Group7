@@ -1,0 +1,7 @@
+Type,Name,Description,LibraryCode,Status,Author,Genre,Artist,Year,ToyType,AgeGroup
+Book,"The Hobbit","A fantasy adventure in Middle-earth",BOOK001,Available,"J.R.R. Tolkien","Fantasy",,,,
+Book,"1984","Dystopian novel about totalitarianism",BOOK002,Available,"George Orwell","Science Fiction",,,,
+Music,"Abbey Road","The Beatles iconic album",MUSIC001,Available,,,"The Beatles",1969,,
+Music,"Thriller","Michael Jackson's best-selling album",MUSIC002,Borrowed,,,"Michael Jackson",1982,,
+Toy,"LEGO Classic Set","Building blocks set for children",TOY001,Available,,,,,Building Blocks,4-12
+Toy,"Teddy Bear","Soft plush toy",TOY002,Available,,,,,Stuffed Animal,0-5
