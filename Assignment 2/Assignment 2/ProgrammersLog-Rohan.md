@@ -1439,3 +1439,20 @@ Confirmed:
 ---
 
 *End of Stage 8 – Bug Fix Complete*
+
+---
+
+## Stage 9 - Rohan Work Verification and Final Run
+
+**Date:** 2026  
+**Status:** COMPLETE  
+**Build Result:** Successful  
+**Startup:** dotnet run --no-build web from Assignment 2/Assignment 2 (http://localhost:5108)
+
+### Verification
+- Rohan-scope features (CSV import, manager analytics, CSV/text exports) are implemented and logged in Stages 3-8.
+- Routes tested after the run, all HTTP 200: /, /Home/Index, /Search, /Import, /Export, /Export/Index, /Analytics/Dashboard, /Analytics/Borrowing, /Analytics/ItemStatus, /Analytics/Fines, /Analytics/ByType.
+- No source code changed in this stage; existing functionality is preserved.
+
+*End of Stage 9*
+
