@@ -148,3 +148,29 @@ Query params on the list: `name` (partial), `type` (`Book`/`Music`/`Toy`), `stat
 
 ---
 
+## Stage 3 — API Validation, Security and Documentation (2026-10-15)
+
+### Files changed
+
+- `Controllers/Api/CatalogueController.cs` — added `GET /api/catalogue/docs` (self-describing, machine-readable API summary) and a `name` length guard (≤100 chars → 400). No behaviour of existing endpoints changed.
+- `API-DOCS.md` (new) — human-readable documentation: base URL, quick start, all endpoints, query/route parameters, response model (`ItemDto`), example 200/404 responses, status-code table, and the security notes (read-only, no sensitive data, result limits).
+
+### Security/validation state
+
+- Strictly GET-only; `POST`/`PUT`/`DELETE` return **405** (verified in Stage 2).
+- All user input is validated: `page ≥ 1`, `pageSize 1–50`, `type`/`status` allow-lists, `name` ≤100 chars, `libraryCode` non-empty and ≤20 chars → **400** otherwise.
+- Errors are RFC 7807 `ProblemDetails`; 500 responses are generic and never leak stack traces or internals.
+- Responses are DTO projections only — no internal entities, borrower PII, fines, passwords or secrets.
+- Collection responses are always paged (max 50/page), so results cannot be unbounded.
+- No new dependencies or packages added.
+
+### Verification (actually executed, app on port 5108)
+
+- Build: `dotnet build` → succeeded, 0 errors.
+- `GET /api/catalogue/docs` → **200**, correct machine-readable summary.
+- `GET /api/catalogue?name=` + 101 chars → **400**; `?name=gatsby` → **200**, 1 match.
+- (Regression) list/detail/404/400/405 results from Stage 2 remain valid; existing MVC pages unaffected.
+
+---
+
+

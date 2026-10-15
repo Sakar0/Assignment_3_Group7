@@ -25,6 +25,66 @@ namespace Assignment2.Controllers.Api
         private static readonly string[] AllowedStatuses = { "Available", "Borrowed", "Damaged", "Destroy" };
 
         /// <summary>
+        /// GET /api/catalogue/docs
+        /// Returns a self-describing machine-readable summary of the API surface
+        /// (endpoints, parameters, limits and error codes). Read-only.
+        /// </summary>
+        [HttpGet("docs")]
+        public IActionResult GetDocs()
+        {
+            var docs = new
+            {
+                title = "Library Catalogue API (read-only)",
+                version = "1.0",
+                baseRoute = "/api/catalogue",
+                writeOperationsAllowed = false,
+                endpoints = new object[]
+                {
+                    new
+                    {
+                        method = "GET",
+                        path = "/api/catalogue",
+                        description = "Paged list of catalogue items.",
+                        queryParameters = new object[]
+                        {
+                            new { name = "name", type = "string", required = false, notes = "Partial, case-insensitive name filter." },
+                            new { name = "type", type = "string", required = false, notes = "One of: Book, Music, Toy." },
+                            new { name = "status", type = "string", required = false, notes = "One of: Available, Borrowed, Damaged, Destroy." },
+                            new { name = "page", type = "int", required = false, notes = "Page number >= 1. Default 1." },
+                            new { name = "pageSize", type = "int", required = false, notes = $"1-{MaxPageSize}. Default {DefaultPageSize}." }
+                        },
+                        successStatus = 200
+                    },
+                    new
+                    {
+                        method = "GET",
+                        path = "/api/catalogue/{libraryCode}",
+                        description = "Single catalogue item by library code.",
+                        routeParameters = new object[]
+                        {
+                            new { name = "libraryCode", type = "string", required = true, notes = $"Non-empty, at most {MaxLibraryCodeLength} characters." }
+                        },
+                        successStatus = 200,
+                        errorStatuses = new[] { 400, 404 }
+                    }
+                },
+                errors = new
+                {
+                    format = "RFC 7807 ProblemDetails (application/json)",
+                    statuses = new object[]
+                    {
+                        new { status = 400, meaning = "Invalid query or route parameter." },
+                        new { status = 404, meaning = "Requested item does not exist." },
+                        new { status = 405, meaning = "Method not allowed - the API is read-only (GET only)." },
+                        new { status = 500, meaning = "Unexpected server error (no internal details are exposed)." }
+                    }
+                }
+            };
+
+            return Ok(docs);
+        }
+
+        /// <summary>
         /// GET /api/catalogue
         /// Lists catalogue items with optional filtering and pagination.
         /// </summary>
@@ -48,6 +108,9 @@ namespace Assignment2.Controllers.Api
 
                 if (pageSize < 1 || pageSize > MaxPageSize)
                     return InvalidParameter($"'pageSize' must be between 1 and {MaxPageSize}.");
+
+                if (name != null && name.Length > 100)
+                    return InvalidParameter("'name' must be 100 characters or fewer.");
 
                 if (!string.IsNullOrWhiteSpace(type) &&
                     !AllowedTypes.Contains(type, StringComparer.OrdinalIgnoreCase))
