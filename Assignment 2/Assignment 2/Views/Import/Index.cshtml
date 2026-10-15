@@ -49,21 +49,23 @@
 
                         <div class="mb-3 p-3 bg-light border rounded">
                             <h5 class="mb-2">CSV Format Requirements:</h5>
-                            <p class="mb-2"><strong>Header row must contain:</strong></p>
+                            <p class="mb-2"><strong>Your CSV file must have these columns:</strong></p>
                             <ul class="mb-3">
-                                <li><code>Type</code> - Item type: Book, Music, or Toy</li>
+                                <li><code>Type</code> - Item type: Book, Music, or Toy (required)</li>
                                 <li><code>Name</code> - Item name (required)</li>
                                 <li><code>Description</code> - Item description (optional)</li>
-                                <li><code>LibraryCode</code> - Unique identifier (must be unique)</li>
+                                <li><code>LibraryCode</code> - Unique identifier (must be unique in library)</li>
                                 <li><code>Status</code> - One of: Available, Borrowed, Damaged, Destroy</li>
                             </ul>
 
-                            <p class="mb-2"><strong>Type-specific columns:</strong></p>
-                            <ul class="mb-2">
+                            <p class="mb-2"><strong>Additional columns required by item type:</strong></p>
+                            <ul class="mb-3">
                                 <li><strong>Book:</strong> <code>Author</code>, <code>Genre</code></li>
-                                <li><strong>Music:</strong> <code>Artist</code>, <code>Year</code> (integer)</li>
+                                <li><strong>Music:</strong> <code>Artist</code>, <code>Year</code> (must be a number)</li>
                                 <li><strong>Toy:</strong> <code>ToyType</code>, <code>AgeGroup</code></li>
                             </ul>
+
+                            <p class="mb-2"><strong>Important:</strong> Ensure your CSV file contains the exact column headers shown above. The import will fail if required columns are missing or if the data does not match the required format.</p>
 
                             <a href="/files/sample_import.csv" class="btn btn-sm btn-outline-info mt-2">
                                 <i class="bi bi-download"></i> Download Sample CSV

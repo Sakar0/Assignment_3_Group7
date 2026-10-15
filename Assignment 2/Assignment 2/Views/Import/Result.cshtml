@@ -20,7 +20,7 @@
                         <div class="col-md-6">
                             <div class="card border-success">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title text-success">✓ Successfully Imported</h5>
+                                    <h5 class="card-title text-success">&check; Successfully Imported</h5>
                                     <h2 class="text-success">@Model.SuccessCount</h2>
                                 </div>
                             </div>
@@ -28,7 +28,7 @@
                         <div class="col-md-6">
                             <div class="card @(Model.FailureCount > 0 ? "border-danger" : "border-success")">
                                 <div class="card-body text-center">
-                                    <h5 class="card-title @(Model.FailureCount > 0 ? "text-danger" : "text-success")">✗ Failed</h5>
+                                    <h5 class="card-title @(Model.FailureCount > 0 ? "text-danger" : "text-success")">&times; Failed</h5>
                                     <h2 class="@(Model.FailureCount > 0 ? "text-danger" : "text-success")">@Model.FailureCount</h2>
                                 </div>
                             </div>

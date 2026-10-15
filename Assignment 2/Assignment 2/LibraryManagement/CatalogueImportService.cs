@@ -182,25 +182,25 @@ namespace Assignment2.LibraryManagement
 
             if (!columnIndices.ContainsKey("type"))
             {
-                error = "Missing required column: Type";
+                error = "Missing required column: Type. This CSV file does not appear to be a library catalogue CSV. Required columns: Type, Name, LibraryCode, Status. Please download the sample CSV from the Import page.";
                 return false;
             }
 
             if (!columnIndices.ContainsKey("name"))
             {
-                error = "Missing required column: Name";
+                error = "Missing required column: Name. This CSV file does not appear to be a library catalogue CSV. Required columns: Type, Name, LibraryCode, Status. Please download the sample CSV from the Import page.";
                 return false;
             }
 
             if (!columnIndices.ContainsKey("librarycode"))
             {
-                error = "Missing required column: LibraryCode";
+                error = "Missing required column: LibraryCode. This CSV file does not appear to be a library catalogue CSV. Required columns: Type, Name, LibraryCode, Status. Please download the sample CSV from the Import page.";
                 return false;
             }
 
             if (!columnIndices.ContainsKey("status"))
             {
-                error = "Missing required column: Status";
+                error = "Missing required column: Status. This CSV file does not appear to be a library catalogue CSV. Required columns: Type, Name, LibraryCode, Status. Please download the sample CSV from the Import page.";
                 return false;
             }
 
