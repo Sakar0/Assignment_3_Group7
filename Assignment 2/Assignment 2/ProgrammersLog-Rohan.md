@@ -630,4 +630,131 @@ Import service is complete and ready for web controller integration in Stage 4.
 
 ---
 
-*End of Stage 3 Implementation*
+## Stage 4 – Add the Administrator Import Interface
+
+**Date:** 2026  
+**Status:** COMPLETE  
+**Build Result:** ✅ Successful  
+**Web Runtime Test:** ✅ Successful (http://localhost:5108)
+
+### Implementation Summary
+
+Created complete web interface for CSV import functionality:
+
+#### 1. **ImportController.cs**
+New controller with two endpoints:
+
+**GET /Import/Index**
+- Displays upload form with instructions
+- Shows CSV format requirements
+- Provides sample file download link
+- Validates file client-side
+
+**POST /Import/Upload**
+- Accepts file upload
+- Validates:
+  - File exists and has content
+  - File size ≤ 10 MB (configurable constant)
+  - MIME type is CSV (text/csv or application/csv)
+  - Fallback validation by file extension
+- Saves uploaded file to temporary directory with timestamp
+- Calls CatalogueImportService to process CSV
+- Saves data via DataService.SaveAllData() only if import successful
+- Cleans up temporary file after processing
+- Returns ImportResult to Result view
+
+**Design Decisions:**
+- Temporary file storage with timestamped filename prevents collisions
+- File size check prevents memory overload
+- MIME type validation with extension fallback
+- Per-file error handling with clear messages
+- Automatic data persistence after successful imports
+
+#### 2. **Views/Import/Index.cshtml**
+User-friendly upload form featuring:
+- File input with .csv filter
+- Clear format requirements documentation
+- Column summary (Type, Name, Description, LibraryCode, Status)
+- Type-specific column guidance (Book/Music/Toy)
+- Sample CSV download link
+- File size warning (10 MB max)
+- Submit and cancel buttons
+- Bootstrap styling with card layout
+- Error display via ModelState
+
+#### 3. **Views/Import/Result.cshtml**
+Comprehensive results display featuring:
+- Summary statistics (success/failure counts)
+- Success alert if items imported
+- Detailed imported items table showing:
+  - Item type (as badge)
+  - Name, LibraryCode, Status
+  - Color-coded status badges
+- Error section with detailed failure information
+  - Row number
+  - Error message (specific field/validation failure)
+  - Raw CSV content for reference
+- Action buttons for import again / view catalogue / home
+
+#### 4. **Layout Navigation Update**
+- Added "Catalogue" link to SearchController
+- Added "Import" link to ImportController
+- Maintains existing Home and Privacy links
+
+#### 5. **File Distribution**
+- `sample_import.csv` created in project root for reference
+- Copied to `wwwroot/files/sample_import.csv` for web download
+- Sample contains 6 valid items (2 Books, 2 Music, 2 Toys) as test data
+
+### Files Created
+
+- `Assignment 2/Controllers/ImportController.cs` – Upload/form handling
+- `Assignment 2/Views/Import/Index.cshtml` – Upload form
+- `Assignment 2/Views/Import/Result.cshtml` – Results display
+- `Assignment 2/wwwroot/files/sample_import.csv` – Downloadable sample
+
+### Files Modified
+
+- `Assignment 2/Views/Shared/_Layout.cshtml` – Added navigation links
+
+### Testing Performed
+
+✅ Build successful, no warnings  
+✅ Web application starts (localhost:5108)  
+✅ All controllers and views load without errors  
+✅ Navigation links display correctly  
+✅ Directory structure verified  
+✅ Sample CSV file accessible in wwwroot  
+✅ ImportController endpoints created successfully  
+✅ File validation logic reviewed  
+
+### Manual Testing (Ready for Next Stage)
+
+The import interface is ready for end-to-end testing:
+1. Start web app: `dotnet run -- web`
+2. Navigate to http://localhost:5108/Import/Index
+3. Upload sample_import.csv or test CSV file
+4. Verify results display with correct counts
+5. Check that items appear in catalogue search
+6. Verify errors are displayed clearly for invalid files
+
+### Known Limitations
+
+1. **File Upload Security:** While MIME type and extension validated, production should add:
+   - Virus/malware scanning
+   - User authentication check
+   - Audit logging of who uploaded what
+
+2. **Concurrent Uploads:** No file locking; multiple simultaneous uploads could issue if they create same temp file (negligible risk with timestamps)
+
+3. **Large Files:** 10 MB limit; for larger files, should implement streaming CSV parser
+
+4. **Temp File Cleanup:** Manual cleanup if server crashes after upload but before result page viewed (acceptable for current phase)
+
+### Next Stage Readiness
+
+Import interface complete and integrated. Ready for Stage 5: comprehensive testing of all validation and error scenarios.
+
+---
+
+*End of Stage 4 Integration*

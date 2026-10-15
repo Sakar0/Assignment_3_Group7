@@ -1,0 +1,166 @@
+@model Assignment2.LibraryManagement.ImportResult
+
+@{
+    ViewData["Title"] = "Import Results";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card shadow-sm">
+                <div class="card-header @(Model.FailureCount > 0 ? "bg-warning text-dark" : "bg-success text-white")">
+                    <h3 class="mb-0">
+                        <i class="bi @(Model.FailureCount > 0 ? "bi-exclamation-triangle" : "bi-check-circle")"></i>
+                        Import Summary
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Summary Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-success">✓ Successfully Imported</h5>
+                                    <h2 class="text-success">@Model.SuccessCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card @(Model.FailureCount > 0 ? "border-danger" : "border-success")">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title @(Model.FailureCount > 0 ? "text-danger" : "text-success")">✗ Failed</h5>
+                                    <h2 class="@(Model.FailureCount > 0 ? "text-danger" : "text-success")">@Model.FailureCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    @if (Model.SuccessCount > 0)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            <h4 class="alert-heading">Success!</h4>
+                            <p class="mb-0">
+                                <strong>@Model.SuccessCount item@(Model.SuccessCount != 1 ? "s" : "")</strong> 
+                                @(Model.SuccessCount == 1 ? "has" : "have") been successfully imported and added to the catalogue.
+                                The data has been saved.
+                            </p>
+                        </div>
+                    }
+
+                    <!-- Imported Items List -->
+                    @if (Model.ImportedItems.Count > 0)
+                    {
+                        <div class="mb-4">
+                            <h5>Imported Items</h5>
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Name</th>
+                                        <th>Library Code</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.ImportedItems)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    @item.GetType().Name
+                                                </span>
+                                            </td>
+                                            <td>@item.Name</td>
+                                            <td><code>@item.LibraryCode</code></td>
+                                            <td>
+                                                @switch (item.Status)
+                                                {
+                                                    case "Available":
+                                                        <span class="badge bg-success">Available</span>
+                                                        break;
+                                                    case "Borrowed":
+                                                        <span class="badge bg-warning">Borrowed</span>
+                                                        break;
+                                                    case "Damaged":
+                                                        <span class="badge bg-danger">Damaged</span>
+                                                        break;
+                                                    case "Destroy":
+                                                        <span class="badge bg-dark">Destroy</span>
+                                                        break;
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    <!-- Errors List -->
+                    @if (Model.FailedRows.Count > 0)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h4 class="alert-heading">Errors Found</h4>
+                            <p>The following rows could not be imported. Please review the errors and correct your CSV file.</p>
+
+                            <table class="table table-sm table-bordered bg-white mt-3">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Row #</th>
+                                        <th>Error Message</th>
+                                        <th>Raw Content</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var error in Model.FailedRows)
+                                    {
+                                        <tr>
+                                            <td><strong>@error.RowNumber</strong></td>
+                                            <td>
+                                                <span class="text-danger">@error.ErrorMessage</span>
+                                            </td>
+                                            <td>
+                                                <small class="font-monospace text-muted" style="word-break: break-all;">
+                                                    @error.RawContent
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4 d-flex gap-2">
+                        <a href="/Import/Index" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Import Another File
+                        </a>
+                        <a href="/Search/Index" class="btn btn-secondary">
+                            <i class="bi bi-search"></i> View Catalogue
+                        </a>
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+    }
+    code {
+        background-color: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+    .font-monospace {
+        font-family: 'Courier New', monospace;
+    }
+</style>
