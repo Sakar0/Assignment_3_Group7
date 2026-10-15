@@ -58,11 +58,25 @@ namespace Assignment2
                 return;
             }
 
+            // Initialize sample branches if none exist
+            if (Assignment2.LibraryManagement.LibraryBranch.AllBranches.Count == 0)
+            {
+                System.Console.WriteLine("Initializing sample branches...");
+                InitializeSampleBranches();
+                System.Console.WriteLine("✓ Sample branches initialized");
+            }
+
             if (Assignment2.LibraryManagement.Item.AllItems.Count == 0)
             {
                 System.Console.WriteLine("Initializing sample data for web application...");
                 InitializeSampleData();
                 System.Console.WriteLine("✓ Sample data initialized");
+            }
+
+            // Save all initialized data
+            if (Assignment2.LibraryManagement.DataService.SaveAllData())
+            {
+                System.Console.WriteLine("✓ Data persisted to disk");
             }
         }
 
@@ -139,5 +153,37 @@ namespace Assignment2
                 "3-7"
             );
         }
+
+        /// <summary>
+        /// Initialize sample library branches
+        /// Creates three realistic branches: Downtown, Campus, and Riverside
+        /// Branches are only created if AllBranches is empty (idempotent)
+        /// </summary>
+        private static void InitializeSampleBranches()
+        {
+            var branchService = new Assignment2.LibraryManagement.BranchService();
+
+            // Branch 1: Downtown Library
+            branchService.CreateBranch(
+                "BR001",
+                "Downtown Library",
+                "123 Main Street, City Center | Tel: (555) 001-1234 | Hours: 9 AM - 9 PM"
+            );
+
+            // Branch 2: Campus Branch
+            branchService.CreateBranch(
+                "BR002",
+                "Campus Branch",
+                "456 University Ave, Academic District | Tel: (555) 002-5678 | Hours: 8 AM - 10 PM"
+            );
+
+            // Branch 3: Riverside Community Library
+            branchService.CreateBranch(
+                "BR003",
+                "Riverside Community Library",
+                "789 Riverside Road, Suburban Area | Tel: (555) 003-9999 | Hours: 10 AM - 6 PM"
+            );
+        }
     }
 }
+
