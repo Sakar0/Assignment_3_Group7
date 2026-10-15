@@ -1,0 +1,176 @@
+@model Assignment2.Controllers.PendingApprovalsViewModel
+
+@{
+    ViewData["Title"] = "Pending Approvals";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Pending Transfer Approvals - @Model.DestinationBranch?.BranchName</h2>
+            <p class="text-muted">Items requesting transfer to <strong>@Model.DestinationBranch?.BranchName</strong>. Review and approve or reject each request.</p>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (Model.PendingTransfers.Count == 0)
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    No pending transfers awaiting approval for @Model.DestinationBranch?.BranchName.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive mt-4">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Transfer ID</th>
+                                <th>Item</th>
+                                <th>Source Branch</th>
+                                <th>Status</th>
+                                <th>Requested</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in Model.PendingTransfers)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@detail.Transfer.TransferId</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@detail.Item?.Name</strong><br />
+                                            <small class="text-muted">@detail.Item?.LibraryCode</small>
+                                        </div>
+                                    </td>
+                                    <td>@detail.SourceBranch?.BranchName<br /><small class="text-muted">@detail.SourceBranch?.BranchId</small></td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">@detail.Transfer.Status</span>
+                                    </td>
+                                    <td>
+                                        <small>@detail.Transfer.CreatedDate:g</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@detail.Transfer.Notes</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- Approve Button -->
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#approveModal_@detail.Transfer.TransferId">
+                                                <i class="bi bi-check-circle"></i> Approve
+                                            </button>
+
+                                            <!-- Reject Button -->
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#rejectModal_@detail.Transfer.TransferId">
+                                                <i class="bi bi-x-circle"></i> Reject
+                                            </button>
+                                        </div>
+
+                                        <!-- Approve Modal -->
+                                        <div class="modal fade" id="approveModal_@detail.Transfer.TransferId" tabindex="-1">
+                                            <div class="modal-dialog modal-sm">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-success text-white">
+                                                        <h5 class="modal-title">Approve Transfer @detail.Transfer.TransferId</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form method="post" asp-action="ApproveTransfer">
+                                                        @Html.AntiForgeryToken()
+                                                        <div class="modal-body">
+                                                            <p>
+                                                                Approve transfer of <strong>@detail.Item?.Name (@detail.Item?.LibraryCode)</strong>
+                                                                from <strong>@detail.SourceBranch?.BranchName</strong>?
+                                                            </p>
+                                                            <div class="mb-3">
+                                                                <label for="approveNote_@detail.Transfer.TransferId" class="form-label">Approval Note (optional):</label>
+                                                                <textarea id="approveNote_@detail.Transfer.TransferId" name="approvalNote" class="form-control form-control-sm" rows="2" placeholder="e.g., 'Verified, ready for receipt'"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                                            <input type="hidden" name="transferId" value="@detail.Transfer.TransferId" />
+                                                            <input type="hidden" name="approvingBranchId" value="@Model.DestinationBranch.BranchId" />
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reject Modal -->
+                                        <div class="modal fade" id="rejectModal_@detail.Transfer.TransferId" tabindex="-1">
+                                            <div class="modal-dialog modal-sm">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">Reject Transfer @detail.Transfer.TransferId</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form method="post" asp-action="RejectTransfer">
+                                                        @Html.AntiForgeryToken()
+                                                        <div class="modal-body">
+                                                            <p>
+                                                                Reject transfer of <strong>@detail.Item?.Name (@detail.Item?.LibraryCode)</strong>?
+                                                            </p>
+                                                            <p class="text-warning small"><i class="bi bi-exclamation-triangle"></i> The item will remain at @detail.SourceBranch?.BranchName.</p>
+                                                            <div class="mb-3">
+                                                                <label for="rejectReason_@detail.Transfer.TransferId" class="form-label">Rejection Reason:</label>
+                                                                <textarea id="rejectReason_@detail.Transfer.TransferId" name="rejectionReason" class="form-control form-control-sm" rows="2" placeholder="e.g., 'Currently in demand locally', 'Storage unavailable'" required></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                                            <input type="hidden" name="transferId" value="@detail.Transfer.TransferId" />
+                                                            <input type="hidden" name="rejectingBranchId" value="@Model.DestinationBranch.BranchId" />
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="@Url.Action("History", "Transfer")">All Transfers</a></li>
+                                <li class="breadcrumb-item active">Pending Approvals for @Model.DestinationBranch?.BranchName</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <a href="@Url.Action("History", "Transfer")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Transfer History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
