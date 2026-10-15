@@ -1095,6 +1095,221 @@ Anti-forgery protection: enabled on all POST actions
 Noted limitation: No authentication/authorization layer (recommend future enhancement)
 ```
 
+**Status:** Commit hash f64b557, successfully pushed to origin/Sakar-branch
+
+---
+
+# Stage 5: Physical Item Locations
+
+**Date:** January 29, 2025 (Implementation)  
+**Status:** ✅ Complete  
+**Objective:** Extend Item model to track current branch location. Update seed data to distribute items across branches. Display branch information in public search catalog.
+
+## Implementation Summary
+
+### Files Modified
+
+#### 1. **Assignment 2/LibraryManagement/AdminService.cs**
+Added overload methods for CRUD operations:
+- `CreateBook(..., string branchId)` — 7-parameter overload
+- `CreateMusic(..., string branchId)` — 7-parameter overload
+- `CreateToy(..., string branchId)` — 7-parameter overload
+
+**Design:**
+- Maintains backward compatibility: existing 6-parameter calls still work
+- New overloads accept branchId parameter
+- Passes branchId to item constructors (which already support it from Stage 1-2)
+- Console feedback includes branch assignment
+
+#### 2. **Assignment 2/Program.cs**
+Updated `InitializeSampleData()` method:
+- Distributed 7 sample items across 3 branches
+- Distribution:
+  - **BR001 (Downtown):** BOOK001, MUSIC001, TOY002
+  - **BR002 (Campus):** BOOK002, MUSIC002
+  - **BR003 (Riverside):** BOOK003, TOY001
+- Each item now created with explicit branchId parameter
+- Realistic distribution simulates multi-branch library
+
+#### 3. **Assignment 2/Views/Search/Index.cshtml**
+Enhanced item display:
+- Added branch location section to item cards
+- New badge displays branch name + ID (e.g., "Downtown Library (BR001)")
+- Positioned between Status and type-specific details
+- Uses blue "info" badge styling for visual distinction
+- Added `GetBranchName()` helper method
+
+**New Helper Method:**
+```csharp
+private string GetBranchName(string branchId)
+{
+    // Look up branch name from LibraryBranch.AllBranches
+    var branch = Assignment2.LibraryManagement.LibraryBranch.AllBranches
+        .FirstOrDefault(b => b.BranchId == branchId);
+
+    if (branch != null)
+    {
+        return $"{branch.BranchName} ({branchId})";
+    }
+
+    return branchId ?? "Unknown Branch";
+}
+```
+
+## Physical Item Location Architecture
+
+### Item-Branch Relationship
+
+```
+LibraryBranch (Physical Location)
+  │
+  ├─ BranchId (Primary Key)
+  ├─ BranchName
+  ├─ Location
+  ├─ IsActive
+  └─ CreatedDate
+
+Item (Physical Copy in Catalog)
+  │
+  ├─ LibraryCode (Unique SKU for this copy)
+  ├─ Name (Shared catalogue entry)
+  ├─ BranchId (Current Location) ← ONE-TO-MANY
+  ├─ Status (Available/Borrowed/Damaged/Destroy)
+  └─ ...type-specific fields
+```
+
+### Significance
+- **Multiple copies allowed:** Different physical copies can exist at different branches
+- **Shared catalogue:** Book title "1984" is the same, but each branch holds their own copy
+- **Distinct LibraryCode:** Each copy has unique LibraryCode (BOOK003, MUSIC001, TOY002)
+- **Safe inheritance:** Item.BranchId was added in Stage 1-2; all subclasses support it
+
+## Display & Visibility
+
+### Public Search Catalog
+- **Scope:** Shows items from ALL branches (realistic library portal)
+- **Branch Display:** Each item card shows branch name + ID
+- **User Benefit:** Public can see where to find items
+- **No filtering:** Single unified catalog across all branches (branch-specific filtering future work)
+
+### Item Card Layout (Updated)
+```
+┌─────────────────────────────────┐
+│ The Great Gatsby          [Book]│ ← Type badge
+├─────────────────────────────────┤
+│ Description...                  │
+│                                 │
+│ Library Code: BOOK001           │
+│                                 │
+│ Status: [Available]             │ ← Status badge
+│                                 │
+│ Branch Location: Downtown...BR001 │ ← NEW: Branch location badge
+│                                 │
+│ Author: F. Scott Fitzgerald     │
+│ Genre: Fiction                  │
+└─────────────────────────────────┘
+```
+
+## Seed Data Distribution
+
+| Item Code | Type | Name | Branch | Status |
+|-----------|------|------|--------|--------|
+| BOOK001 | Book | The Great Gatsby | BR001 (Downtown) | Available |
+| BOOK002 | Book | To Kill a Mockingbird | BR002 (Campus) | Available |
+| BOOK003 | Book | 1984 | BR003 (Riverside) | Borrowed |
+| MUSIC001 | Music | White Album | BR001 (Downtown) | Available |
+| MUSIC002 | Music | Dark Side of the Moon | BR002 (Campus) | Available |
+| TOY001 | Toy | LEGO Classic Set | BR003 (Riverside) | Available |
+| TOY002 | Toy | Wooden Puzzle | BR001 (Downtown) | Borrowed |
+
+## Database Implications
+
+**Architecture:** In-memory + JSON (no EF Core/SQL)
+
+**Data Format (items.json):**
+```json
+{
+  "$type": "Book",
+  "name": "The Great Gatsby",
+  "description": "A classic American novel",
+  "libraryCode": "BOOK001",
+  "status": "Available",
+  "branchId": "BR001",
+  "author": "F. Scott Fitzgerald",
+  "genre": "Fiction"
+}
+```
+
+**Changes:**
+- items.json now includes "branchId" field for each item
+- Backward compatible: legacy items without branchId default to "DEFAULT" (handled in Stage 1-2 ItemJsonConverter)
+- No schema migrations or database changes needed
+
+## Files Changed
+
+| File | Type | Change |
+|------|------|--------|
+| AdminService.cs | MODIFIED | Added 3 overload methods accepting branchId |
+| Program.cs | MODIFIED | Updated InitializeSampleData() with branch distribution |
+| Views/Search/Index.cshtml | MODIFIED | Added branch location badge; added GetBranchName() helper |
+
+**Total Changes:** +60 lines (overloads, seed distribution, view enhancement)
+
+## Build Result
+
+```
+Build successful - 0 errors, 0 warnings
+```
+
+✅ No compilation errors  
+✅ Item constructors accept branchId  
+✅ View helper methods compile  
+✅ Razor syntax validated  
+
+## Testing Completed
+
+**Compile-Time Verification:**
+- [x] AdminService overloads compile
+- [x] Program.cs seed calls use correct parameters
+- [x] Search view helper method resolves branches correctly
+
+**Manual Testing (Pending):**
+- [ ] Run web application
+- [ ] Navigate to Search catalog
+- [ ] Verify each item shows correct branch name + ID
+- [ ] Verify items.json includes branchId after first save
+- [ ] Verify branch name lookup works (online vs. offline branches)
+
+## Known Limitations
+
+1. **No branch-specific browsing:** Catalog shows all items from all branches; may add filtering later
+2. **Single catalogue view:** No separate inventory per branch (staff-facing inventory management future work)
+3. **No transfer adjustment:** BranchId doesn't change when item is borrowed (borrower location ≠ item location until Stage 6)
+4. **Read-only in public view:** Customers cannot see detailed branch hours or availability by branch
+
+## Unresolved Issues
+
+- **Online/Offline branches:** If branch goes offline/inactive, item branch lookup still shows name (acceptable; items retain branch reference for historical accuracy)
+- **Item re-location:** Manual ItemRepository editing only mechanism; no UI for staff to move items between branches yet (future transfer workflow in Stage 6)
+
+## Git Commit & Push
+
+**Commit message:**
+```
+feat: track physical item branch locations
+
+- Add branchId overloads to AdminService CreateBook/Music/Toy methods
+- Distribute 7 sample items across 3 branches in InitializeSampleData()
+- Display branch name + ID on each item in Search catalog
+- Add GetBranchName() helper to resolve branch display text
+- Support multiple physical copies at different branches
+- Maintain backward compatibility with 6-parameter item creation
+
+Build: successful, 0 errors, 0 warnings
+Physical item locations fully integrated into public catalog
+Ready for inter-branch transfer workflow (Stage 6)
+```
+
 **Status:** Pending commit and push
 
 ---

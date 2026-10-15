@@ -87,61 +87,84 @@ namespace Assignment2
         {
             var adminService = new Assignment2.LibraryManagement.AdminService();
 
-            // Sample Books
+            // Sample Books - Distributed across branches
+            // Downtown Library (BR001)
             adminService.CreateBook(
                 "The Great Gatsby",
                 "A classic American novel",
                 "BOOK001",
                 "Available",
                 "F. Scott Fitzgerald",
-                "Fiction"
+                "Fiction",
+                "BR001"
             );
 
+            // Campus Branch (BR002)
             adminService.CreateBook(
                 "To Kill a Mockingbird",
                 "An American literary classic",
                 "BOOK002",
                 "Available",
                 "Harper Lee",
-                "Fiction"
+                "Fiction",
+                "BR002"
             );
 
+            // Riverside Community Library (BR003)
             adminService.CreateBook(
                 "1984",
                 "A dystopian social science fiction novel",
                 "BOOK003",
                 "Borrowed",
                 "George Orwell",
-                "Science Fiction"
+                "Science Fiction",
+                "BR003"
             );
 
-            // Sample Music
+            // Sample Music - Distributed across branches
+            // Downtown Library (BR001)
             adminService.CreateMusic(
                 "White Album",
                 "The Beatles' iconic album",
                 "MUSIC001",
                 "Available",
                 "The Beatles",
-                1968
+                1968,
+                "BR001"
             );
 
+            // Campus Branch (BR002)
             adminService.CreateMusic(
                 "Dark Side of the Moon",
                 "Pink Floyd's masterpiece",
                 "MUSIC002",
                 "Available",
                 "Pink Floyd",
-                1973
+                1973,
+                "BR002"
             );
 
-            // Sample Toys
+            // Sample Toys - Distributed across branches
+            // Riverside Community Library (BR003)
             adminService.CreateToy(
                 "LEGO Classic Set",
                 "Educational building blocks",
                 "TOY001",
                 "Available",
                 "Construction",
-                "4-12"
+                "4-12",
+                "BR003"
+            );
+
+            // Downtown Library (BR001)
+            adminService.CreateToy(
+                "Wooden Puzzle",
+                "Traditional wooden puzzle game",
+                "TOY002",
+                "Borrowed",
+                "Puzzle",
+                "3-7",
+                "BR001"
             );
 
             adminService.CreateToy(
