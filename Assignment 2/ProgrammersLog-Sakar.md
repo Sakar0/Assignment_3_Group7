@@ -1310,6 +1310,228 @@ Physical item locations fully integrated into public catalog
 Ready for inter-branch transfer workflow (Stage 6)
 ```
 
+**Status:** Commit hash f600fbc, successfully pushed to origin/Sakar-branch
+
+---
+
+# Stage 6: Transfer Model & Workflow
+
+**Date:** January 29, 2025 (Implementation)  
+**Status:** ✅ Complete  
+**Objective:** Create transfer model and service layer to orchestrate inter-branch item movement. Enable staff to initiate, approve, reject, and complete transfers with full state tracking and item location updates.
+
+## Implementation Summary
+
+### Files Created
+
+#### 1. **Assignment 2/LibraryManagement/LibraryTransfer.cs**
+Core transfer model with rich semantics:
+- **TransferId:** Unique transfer identifier (TR001, TR002, etc.)
+- **ItemId:** Reference to Item.LibraryCode being transferred
+- **SourceBranchId / DestinationBranchId:** Branch-to-branch routing
+- **Status enum (TransferStatus):**
+  - `Initiated` – New transfer, awaiting destination approval
+  - `Approved` – Destination approved; ready for shipment
+  - `InTransit` – Item in physical transit (simulated status)
+  - `Completed` – Item received; item.BranchId updated
+  - `Rejected` – Transfer cancelled; item stays at source
+
+**Key Features:**
+- Validating constructor ensures SourceBranchId ≠ DestinationBranchId
+- CreatedDate auto-set on instantiation
+- CompletedDate captured when transfer resolves
+- Notes field for rejection reason or special instructions
+- Static AllTransfers collection for in-memory storage
+- Parameterless constructor for JSON deserialization
+
+#### 2. **Assignment 2/LibraryManagement/TransferService.cs**
+Transfer service with complete workflow API:
+
+**Workflow Methods:**
+- `InitiateTransfer(itemId, sourceBranchId, destBranchId, notes)` → Creates transfer in "Initiated" status; validates item exists and is at source branch; validates branches exist and are active
+- `ApproveTransfer(transferId, approvingBranchId, notes)` → Transitions "Initiated" → "Approved"; only destination can approve
+- `RejectTransfer(transferId, rejectingBranchId, reason)` → Transitions any status (except Completed) → "Rejected"; item remains at source
+- `CompleteTransfer(transferId, completingBranchId)` → Transitions "Approved"/"InTransit" → "Completed"; **updates item.BranchId atomically**
+
+**Query Methods:**
+- `GetTransfersForBranch(branchId)` – All transfers (source or destination)
+- `GetOutgoingTransfers(sourceBranchId)` – Transfers leaving a branch
+- `GetIncomingTransfers(destinationBranchId)` – Transfers arriving at a branch
+- `GetPendingApprovalsForBranch(destBranchId)` – Transfers awaiting approval (Initiated status)
+- `GetTransferHistory(filterBranchId, filterStatus)` – Full history with optional filters
+- `GetTransferById(transferId)` – Single transfer lookup
+- `GetTransferHistoryForItem(itemId)` – Item movement history
+
+**Counter Methods:**
+- `CountPendingApprovalsForBranch(destBranchId)` – Quick approval queue size
+- `CountActiveTransfersForBranch(branchId)` – Initiated/Approved/InTransit count
+
+**Design Decisions:**
+- All methods use static TransferService (stateless pattern, like BranchService)
+- TransferId generated sequentially (TR001, TR002, ...) via counter
+- Extensive validation at each workflow step (prevents invalid states)
+- Console logging for audit trail
+- Item.BranchId updated atomically when transfer completes
+
+### Files Modified
+
+#### 1. **Assignment 2/LibraryManagement/DataService.cs**
+Added transfers.json persistence:
+- New file path: `transfers.json` in data directory
+- `SaveTransfers()` – Serialize LibraryTransfer.AllTransfers to JSON
+- `LoadTransfers()` – Deserialize transfers.json and populate AllTransfers
+- `HasSavedTransfers()` – Check if transfers.json exists
+- Integrated into `SaveAllData()` and `LoadAllData()` workflows
+
+**Example transfers.json format:**
+```json
+[
+  {
+    "transferId": "TR001",
+    "itemId": "BOOK001",
+    "sourceBranchId": "BR001",
+    "destinationBranchId": "BR002",
+    "status": "Completed",
+    "createdDate": "2025-01-29T10:30:00",
+    "completedDate": "2025-01-29T10:32:00",
+    "notes": "Requested by Campus library [Approved: Received and verified]"
+  }
+]
+```
+
+#### 2. **Assignment 2/Program.cs**
+Added transfer seeding via `InitializeSampleTransfers()`:
+
+**Sample Transfers (3 demonstrating different states):**
+1. **TR001 (Completed):** BOOK001 from BR001→BR002
+   - Status: Completed
+   - Item.BranchId now BR002
+   - Notes: "Requested by Campus library"
+
+2. **TR002 (Initiated):** MUSIC001 from BR001→BR003
+   - Status: Initiated (awaiting BR003 approval)
+   - Item still at BR001
+   - Notes: "High demand at Riverside"
+
+3. **TR003 (Approved):** MUSIC002 from BR002→BR001
+   - Status: Approved (simulating in-transit)
+   - Item still at BR002
+   - Notes: "Balanced collection distribution"
+
+**Integration:**
+- Called during `InitializeWebAppData()` if no transfers exist
+- Only runs on first app startup (idempotent)
+- Transfers seeded AFTER items, so transfer validation succeeds
+
+## Transfer Workflow States
+
+```
+[Initiated] <-- New transfer created
+     |
+     v
+[Approved] <-- Destination approves
+     |
+     v
+[InTransit] <-- (Optional simulation state)
+     |
+     v
+[Completed] <-- Received; item.BranchId updated
+     ^
+     |
+[Rejected] <-- Can reject from any state (except Completed)
+```
+
+**Atomic Operations:**
+- When `CompletTransfer()` completes, Item.BranchId is updated in-memory
+- Next `DataService.SaveAllData()` persists both transfer and updated item state
+- No partial-failure state: either both succeed or operation throws
+
+## Database Implications
+
+**Architecture:** In-memory + JSON (no relational database)
+
+**New File:** transfers.json
+- Persists alongside items.json, borrowers.json, branches.json, borrow_records.json
+- Loaded on app startup via DataService.LoadAllData()
+- Updated on every transfer operation via DataService.SaveAllData()
+
+**Data Consistency:**
+- Transfer state and Item.BranchId tied together
+- Completed transfers = item successfully relocated
+- Rejected transfers = item never moved (remains at source)
+
+## Files Changed
+
+| File | Type | Changes |
+|------|------|---------|
+| LibraryTransfer.cs | CREATE | 130+ lines; transfer model + enum |
+| TransferService.cs | CREATE | 280+ lines; CRUD + workflow + queries |
+| DataService.cs | MODIFY | +60 lines; transfers.json save/load methods |
+| Program.cs | MODIFY | +30 lines; InitializeSampleTransfers() seeding |
+
+**Total New Code:** ~500 lines (transfer model + service)
+
+## Build Result
+
+```
+Build successful - 0 errors, 0 warnings
+```
+
+✅ LibraryTransfer compiles (enum + static collection)  
+✅ TransferService compiles (static methods + validation logic)  
+✅ DataService compiles (JSON serialization added)  
+✅ Program compiles (seeding method integrated)  
+
+## Testing Status
+
+**Build-Time Verification:**
+- [x] LibraryTransfer.TransferStatus enum valid
+- [x] TransferService static methods callable
+- [x] DataService SaveTransfers/LoadTransfers compile
+- [x] Program.InitializeSampleTransfers() syntax valid
+
+**Runtime Verification (Pending):**
+- [ ] InitializeWebAppData() calls InitializeSampleTransfers()
+- [ ] Sample transfers seed successfully
+- [ ] transfers.json persists correctly
+- [ ] TransferService validation catches invalid inputs
+- [ ] CompleteTransfer updates item.BranchId in-memory
+
+## Known Limitations
+
+1. **No Transfer Rejection History:** Current UI only stores rejection note; no event log of approval/rejection timeline
+2. **No Conflict Handling:** If same item requested by multiple branches, first-approved wins; no queue/priority system
+3. **No Automatic State Progression:** Transfer stays "Approved" indefinitely until manually marked "InTransit" or "Completed"
+4. **No Notification System:** Staff must manually check PendingApprovals; no alerts or automation
+5. **No Audit Trail:** Transfer operations logged to console only; no persistent audit log
+
+## Unresolved Issues
+
+- **Item Ontransfer Flag:** Could add Item.IsInTransit boolean for quick lookup, but not needed if relying on Transfer status query
+- **Cancelled Transfers:** Completed transfers cannot be undone (no reversal mechanism)
+- **Branch Offline:** If source/dest branch deactivated during transfer, no automatic error handling
+
+## Git Commit & Push
+
+**Commit message:**
+```
+feat: add inter-branch transfer model and workflow
+
+- Create LibraryTransfer.cs with TransferId, status enum, full semantics
+- Create TransferService.cs with CRUD and workflow methods:
+  - InitiateTransfer: validate and create new transfer
+  - ApproveTransfer: destination-only approval gate
+  - RejectTransfer: cancel at any stage
+  - CompleteTransfer: finalize and update item.BranchId
+- Update DataService.cs to persist/load transfers.json
+- Seed InitializeSampleTransfers() with 3 demo transfers
+- Full validation at each workflow step
+- Atomic item.BranchId update on completion
+
+Build: successful, 0 errors, 0 warnings
+Transfer layer ready for staff UI (Stage 7)
+```
+
 **Status:** Pending commit and push
 
 ---

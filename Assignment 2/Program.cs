@@ -73,6 +73,13 @@ namespace Assignment2
                 System.Console.WriteLine("✓ Sample data initialized");
             }
 
+            // Initialize sample transfers if none exist
+            if (Assignment2.LibraryManagement.LibraryTransfer.AllTransfers.Count == 0)
+            {
+                System.Console.WriteLine("Initializing sample transfers...");
+                InitializeSampleTransfers();
+            }
+
             // Save all initialized data
             if (Assignment2.LibraryManagement.DataService.SaveAllData())
             {
@@ -206,6 +213,34 @@ namespace Assignment2
                 "Riverside Community Library",
                 "789 Riverside Road, Suburban Area | Tel: (555) 003-9999 | Hours: 10 AM - 6 PM"
             );
+        }
+
+        /// <summary>
+        /// Initialize sample transfers for demonstration
+        /// Creates transfers in various states: one completed, one pending approval, one in transit
+        /// Only runs on first app startup (when transfers.json doesn't exist)
+        /// </summary>
+        private static void InitializeSampleTransfers()
+        {
+            // Only seed if no transfers exist
+            if (Assignment2.LibraryManagement.LibraryTransfer.AllTransfers.Count > 0)
+                return;
+
+            // Sample Transfer 1: Completed transfer (BOOK001 from BR001 to BR002)
+            var transfer1 = Assignment2.LibraryManagement.TransferService.InitiateTransfer("BOOK001", "BR001", "BR002", "Requested by Campus library");
+            Assignment2.LibraryManagement.TransferService.ApproveTransfer(transfer1.TransferId, "BR002", "Received and verified");
+            Assignment2.LibraryManagement.TransferService.CompleteTransfer(transfer1.TransferId, "BR002");
+
+            // Sample Transfer 2: Pending Approval (MUSIC001 from BR001 to BR003)
+            var transfer2 = Assignment2.LibraryManagement.TransferService.InitiateTransfer("MUSIC001", "BR001", "BR003", "High demand at Riverside");
+            // transfer2 remains in "Initiated" status awaiting BR003 approval
+
+            // Sample Transfer 3: In Transit (MUSIC002 from BR002 to BR001)
+            var transfer3 = Assignment2.LibraryManagement.TransferService.InitiateTransfer("MUSIC002", "BR002", "BR001", "Balanced collection distribution");
+            Assignment2.LibraryManagement.TransferService.ApproveTransfer(transfer3.TransferId, "BR001", "Approved for receipt");
+            // transfer3 remains in "Approved" status (simulating in-transit)
+
+            System.Console.WriteLine("✓ Sample transfers initialized");
         }
     }
 }
