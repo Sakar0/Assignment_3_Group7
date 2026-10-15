@@ -76,7 +76,14 @@ namespace Assignment2.Controllers
         {
             if (string.IsNullOrEmpty(branchId))
             {
-                TempData["ErrorMessage"] = "Branch ID required.";
+                // If no branchId provided, redirect to first active branch's pending approvals
+                var firstActiveBranch = LibraryBranch.AllBranches.FirstOrDefault(b => b.IsActive);
+                if (firstActiveBranch != null)
+                {
+                    return RedirectToAction("PendingApprovals", new { branchId = firstActiveBranch.BranchId });
+                }
+
+                TempData["ErrorMessage"] = "No active branches available.";
                 return RedirectToAction("History");
             }
 
@@ -91,6 +98,7 @@ namespace Assignment2.Controllers
             var model = new PendingApprovalsViewModel
             {
                 DestinationBranch = branch,
+                AllActiveBranches = LibraryBranch.AllBranches.Where(b => b.IsActive).OrderBy(b => b.BranchName).ToList(),
                 PendingTransfers = pendingTransfers.Select(t => new PendingTransferDetailViewModel
                 {
                     Transfer = t,
@@ -266,6 +274,7 @@ namespace Assignment2.Controllers
     {
         public LibraryBranch DestinationBranch { get; set; }
         public List<PendingTransferDetailViewModel> PendingTransfers { get; set; } = new();
+        public List<LibraryBranch> AllActiveBranches { get; set; } = new();
     }
 
     /// <summary>

@@ -10,6 +10,29 @@
             <h2>Pending Transfer Approvals - @Model.DestinationBranch?.BranchName</h2>
             <p class="text-muted">Items requesting transfer to <strong>@Model.DestinationBranch?.BranchName</strong>. Review and approve or reject each request.</p>
 
+            <!-- Branch Selector Form -->
+            <div class="card mb-4 bg-light">
+                <div class="card-body">
+                    <form method="get" asp-action="PendingApprovals" class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label for="branchSelector" class="form-label"><strong>Select Branch:</strong></label>
+                            <select id="branchSelector" name="branchId" class="form-select" onchange="this.form.submit()">
+                                <option value="">-- Choose a branch --</option>
+                                @foreach (var branch in Model.AllActiveBranches)
+                                {
+                                    <option value="@branch.BranchId" selected="@(branch.BranchId == Model.DestinationBranch?.BranchId)">
+                                        @branch.BranchName (@branch.BranchId)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary">View Pending Approvals</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">

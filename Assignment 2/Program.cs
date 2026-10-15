@@ -52,7 +52,8 @@ namespace Assignment2
         /// </summary>
         private static void InitializeWebAppData()
         {
-            if (Assignment2.LibraryManagement.DataService.LoadAllData())
+            bool loaded = Assignment2.LibraryManagement.DataService.LoadAllData();
+            if (loaded && Assignment2.LibraryManagement.LibraryTransfer.AllTransfers.Count > 0)
             {
                 System.Console.WriteLine("✓ Loaded existing data from files");
                 return;

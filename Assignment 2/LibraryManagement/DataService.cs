@@ -427,6 +427,19 @@ namespace Assignment2.LibraryManagement
                     {
                         LibraryTransfer.AllTransfers.Add(transfer);
                     }
+
+                    // Reinitialize transfer ID counter based on highest existing ID
+                    var maxTransferId = transfers
+                        .Select(t => t.TransferId)
+                        .Where(id => id.StartsWith("TR") && int.TryParse(id.Substring(2), out _))
+                        .Select(id => int.Parse(id.Substring(2)))
+                        .DefaultIfEmpty(0)
+                        .Max();
+
+                    if (maxTransferId > 0)
+                    {
+                        TransferService.ResetTransferIdCounter(maxTransferId + 1);
+                    }
                 }
             }
             catch (Exception ex)
