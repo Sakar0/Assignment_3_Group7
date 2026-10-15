@@ -110,3 +110,41 @@ A library self-service kiosk (MVC UI) and a secure, read-only REST API, integrat
 - Baseline build verified green (see above). No test project exists — Stage 7 will add an xUnit project (`Assignment 2.Tests`) referencing the app, testing: catalogue list/detail, 400/404 handling, read-only guarantee, `ReceptionService` checkout rules via the kiosk path, duplicate checkout rejection, unavailable-item rejection, and regression of existing search behaviour. No claim of "tests passed" will be made without actual runs.
 
 ---
+
+## Stage 2 — API Structure and Read-Only Catalogue Endpoints (2026-10-15)
+
+### Files added
+
+- `Controllers/Api/CatalogueController.cs` — `[ApiController]`, route `api/catalogue`, GET-only. Two actions: `GetItems` (paged list) and `GetItemByCode` (single item). Depends only on read paths (`SearchService.SearchItems`, `SearchService.FindByLibraryCode`); no write service is referenced. Errors returned as RFC 7807 `ProblemDetails`; 500s are generic (message logged to server console, never leaked).
+- `Models/Api/ItemDto.cs` — read-only DTO with `FromItem` mapping (Book/Music/Toy pattern-match). Exposes only: `libraryCode`, `name`, `description`, `type`, `status`, `isAvailable` + type-specific fields (`author`, `genre`, `artist`, `year`, `toyType`, `ageGroup`; null when not applicable). Internal entities, borrower data and fines are never exposed.
+- `Models/Api/PagedResult.cs` — generic paged wrapper (`items`, `page`, `pageSize`, `totalItems`, `totalPages`) so collections are never unbounded.
+- `KioskApi.http` — 12 ready-made requests for local testing.
+
+### Endpoints implemented
+
+| Method | Route | Success | Errors |
+|---|---|---|---|
+| GET | `/api/catalogue` | 200 + `PagedResult<ItemDto>` | 400 (`page<1`, `pageSize` outside 1–50, invalid `type`/`status`) |
+| GET | `/api/catalogue/{libraryCode}` | 200 + `ItemDto` | 400 (empty/oversized code), 404 (not found) |
+
+Query params on the list: `name` (partial), `type` (`Book`/`Music`/`Toy`), `status` (`Available`/`Borrowed`/`Damaged`/`Destroy`), `page` (≥1), `pageSize` (1–50, default 12).
+
+### Verification (actually executed against the running app, .NET 10, port 5108)
+
+- Build: `dotnet build "Assignment 2.slnx"` → succeeded, 0 errors, 0 warnings after incremental compile.
+- `GET /api/catalogue` → **200**, 7 items, correct paged shape, camelCase DTOs, no borrower fields.
+- `GET /api/catalogue/BOOK001` → **200**, correct book DTO.
+- `GET /api/catalogue/NOPE999` → **404**.
+- `GET /api/catalogue?page=0` → **400**; `?type=Gadget` → **400**; `?pageSize=999` → **400**.
+- `GET /api/catalogue?type=Book&status=Available&pageSize=2` → **200**, 2 book items, `totalItems:2`.
+- Read-only guarantee: `POST` / `PUT` / `DELETE` on the route → **405 Method Not Allowed** (no write action exists).
+- Existing MVC pages regression-checked: `GET /` → **200**, `GET /Search` → **200**.
+- No endpoint changed state: responses are projections of `Item.AllItems`; nothing is added/updated/removed.
+
+### Problems encountered
+
+- Web app start flag is `web` (not `--web`); console entry point otherwise blocks on "Press any key". Documented for future runs.
+- **Push blocked:** `git push origin Aryan-branch` → 403, account `ARYAN303-R` lacks collaborator write access. Stage commits are being made locally and will be pushed once access is granted (see Stage 8). Local Stage 1 commit: `1d9d5c0`.
+
+---
+

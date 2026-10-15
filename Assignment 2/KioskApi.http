@@ -1,0 +1,43 @@
+# Read-Only Catalogue API — Local Test Requests
+# Run with the VS Code "REST Client" extension (or copy into curl/Postman).
+# Start the app first: dotnet run --project "Assignment 2/Assignment 2.csproj" -- web
+@host = http://localhost:5108
+
+### 1. List catalogue (paged, default pageSize=12)
+GET {{host}}/api/catalogue
+
+### 2. Filter by type
+GET {{host}}/api/catalogue?type=Book
+
+### 3. Filter by name (partial, case-insensitive)
+GET {{host}}/api/catalogue?name=gatsby
+
+### 4. Filter by status
+GET {{host}}/api/catalogue?status=Available
+
+### 5. Pagination
+GET {{host}}/api/catalogue?page=2&pageSize=2
+
+### 6. Single item by library code -> 200
+GET {{host}}/api/catalogue/BOOK001
+
+### 7. Missing item -> 404
+GET {{host}}/api/catalogue/NOPE999
+
+### 8. Invalid page -> 400
+GET {{host}}/api/catalogue?page=0
+
+### 9. Invalid type -> 400
+GET {{host}}/api/catalogue?type=Gadget
+
+### 10. Oversized pageSize -> 400
+GET {{host}}/api/catalogue?pageSize=999
+
+### 11. Write attempts are rejected -> 405 Method Not Allowed
+POST {{host}}/api/catalogue
+Content-Type: application/json
+
+{"name":"x"}
+
+### 12. DELETE is rejected -> 405
+DELETE {{host}}/api/catalogue/BOOK001
