@@ -1290,4 +1290,152 @@ System is ready for production use or further enhancement with authentication an
 
 ---
 
-*End of Stage 7 Implementation*
+## Stage 8 – View-Resolution Bug Fix and Project Structure Cleanup
+
+**Date:** 2026  
+**Status:** COMPLETE  
+**Build Result:** ✅ Successful  
+**Runtime Test Result:** ✅ All routes passing (HTTP 200)
+
+### Problem Description
+
+After features were pushed to `origin/Rohan-Branch`, the application returned HTTP 500 when accessing:
+- `/Import/Index`
+- `/Export/Index`
+- `/Analytics/Dashboard` and all Analytics named actions
+
+**Error:** `InvalidOperationException: The view 'Index' was not found. Searched locations: /Views/Import/Index.cshtml, /Views/Shared/Index.cshtml`
+
+### Root Cause Analysis
+
+Investigation revealed a **dual project structure issue**:
+
+1. **Controllers created at both locations:**
+   - `Assignment 2/Assignment 2/Controllers/ImportController.cs` (nested, intended)
+   - `Assignment 2/Controllers/ImportController.cs` (root, unintended)
+   - Same duplication for AnalyticsController and ExportController
+
+2. **Views created at both locations:**
+   - `Assignment 2/Assignment 2/Views/Import/Index.cshtml` (nested, correct content root)
+   - `Assignment 2/Views/Import/Index.cshtml` (root, outside content root)
+   - Same for Export and Analytics views
+
+3. **Service duplication:**
+   - `Assignment 2/Assignment 2/Services/ReportExportService.cs` (nested, intended)
+   - `Assignment 2/Services/ReportExportService.cs` (root, unintended)
+
+4. **Content Root Mismatch:**
+   - ASP.NET Core content root: `C:\Users\LENOVO\hit339\Assignment 2\Assignment 2\`
+   - View resolver searches relative to content root at: `C:\Users\LENOVO\hit339\Assignment 2\Assignment 2\Views\`
+   - Root-level Views folder was **outside** the content root and unreachable by the runtime
+
+### Resolution Steps
+
+#### Step 1: Remove Duplicate Root Files
+- Deleted `Assignment 2/Controllers/ImportController.cs`
+- Deleted `Assignment 2/Controllers/AnalyticsController.cs`
+- Deleted `Assignment 2/Controllers/ExportController.cs`
+- Deleted `Assignment 2/Services/ReportExportService.cs`
+- Deleted entire `Assignment 2/Views/` tree (empty placeholder directories)
+
+#### Step 2: Restore Views from Git
+Used git history to restore all views to their correct nested location:
+- `Assignment 2/Assignment 2/Views/Import/Index.cshtml` (restored from commit 798625b)
+- `Assignment 2/Assignment 2/Views/Import/Result.cshtml` (restored from commit 798625b)
+- `Assignment 2/Assignment 2/Views/Export/Index.cshtml` (restored from commit b11f382)
+- `Assignment 2/Assignment 2/Views/Analytics/Dashboard.cshtml` (restored from commit dbf9394)
+- `Assignment 2/Assignment 2/Views/Analytics/Borrowing.cshtml` (restored from commit dbf9394)
+- `Assignment 2/Assignment 2/Views/Analytics/ItemStatus.cshtml` (restored from commit dbf9394)
+- `Assignment 2/Assignment 2/Views/Analytics/Fines.cshtml` (restored from commit dbf9394)
+- `Assignment 2/Assignment 2/Views/Analytics/ByType.cshtml` (restored from commit dbf9394)
+
+#### Step 3: Verify No Duplicates
+Confirmed:
+- Only nested controllers remain (correct location)
+- Only nested services remain (correct location)
+- Only nested views remain (correct content root)
+- No root duplicates interfering with compilation
+
+#### Step 4: Build and Test
+- ✅ Build successful with no errors or warnings
+- ✅ Application started at `http://localhost:5108`
+- ✅ All data loaded successfully (items.json, borrowers.json, borrow_records.json)
+
+#### Step 5: Route Testing
+
+| Route | Status | Result |
+|-------|--------|--------|
+| GET `/Import/Index` | ✅ Pass | HTTP 200 - CSV upload form displayed |
+| GET `/Export/Index` | ✅ Pass | HTTP 200 - Export options page displayed |
+| GET `/Analytics/Dashboard` | ✅ Pass | HTTP 200 - Dashboard statistics displayed |
+| GET `/Analytics/Borrowing` | ✅ Pass | HTTP 200 - Borrowing analytics displayed |
+| GET `/Analytics/ItemStatus` | ✅ Pass | HTTP 200 - Item status breakdown displayed |
+| GET `/Analytics/Fines` | ✅ Pass | HTTP 200 - Fines report displayed |
+| GET `/Analytics/ByType` | ✅ Pass | HTTP 200 - Item type breakdown displayed |
+
+**Navigation Links:** All navbar links for Import, Export, and Analytics now resolve correctly.
+
+### Files Affected
+
+**Removed (duplicates):**
+- `Assignment 2/Controllers/ImportController.cs` (root)
+- `Assignment 2/Controllers/AnalyticsController.cs` (root)
+- `Assignment 2/Controllers/ExportController.cs` (root)
+- `Assignment 2/Services/ReportExportService.cs` (root)
+- `Assignment 2/Views/` (entire tree)
+
+**Restored (from git history):**
+- `Assignment 2/Assignment 2/Views/Import/Index.cshtml`
+- `Assignment 2/Assignment 2/Views/Import/Result.cshtml`
+- `Assignment 2/Assignment 2/Views/Export/Index.cshtml`
+- `Assignment 2/Assignment 2/Views/Analytics/*.cshtml` (5 files)
+
+**Unchanged (correct location):**
+- `Assignment 2/Assignment 2/Controllers/ImportController.cs`
+- `Assignment 2/Assignment 2/Controllers/AnalyticsController.cs`
+- `Assignment 2/Assignment 2/Controllers/ExportController.cs`
+- `Assignment 2/Assignment 2/Services/ReportExportService.cs`
+
+### Key Learnings
+
+1. **Project Structure Clarity:** ASP.NET Core MVC project structure is conventional:
+   - Single project root: `Assignment 2/Assignment 2/`
+   - All source code (Controllers, Services, Views) relative to project root, not solution root
+   - Content root at runtime is the project directory, not the solution directory
+
+2. **View Resolution:** Razor view paths are relative to content root:
+   - Views searched at: `{ContentRoot}/Views/{Controller}/{Action}.cshtml`
+   - Not at solution root or alternative directories
+   - Misconfiguration causes HTTP 500 with clear error messages
+
+3. **Duplicate Prevention:** When adding features, verify:
+   - Controllers compile to single assembly
+   - No partial copies at alternative directory levels
+   - Use `git status` and `dotnet build` diagnostics
+   - Build errors like CS0101 (duplicate type) indicate structural issues
+
+### Preserved Functionality
+
+✅ All import validation logic intact  
+✅ All CSV export functionality intact  
+✅ All analytics calculations intact  
+✅ All existing group-member features untouched  
+✅ Data persistence (JSON files) working correctly  
+✅ Navigation and navigation links operational  
+
+### Verification Checklist
+
+- ✅ Build passes with no errors
+- ✅ No duplicate type definitions
+- ✅ Application starts without errors
+- ✅ All data files load correctly
+- ✅ Import/Index route returns HTTP 200
+- ✅ Export/Index route returns HTTP 200
+- ✅ All Analytics routes return HTTP 200
+- ✅ Navigation links resolve correctly
+- ✅ No uncommitted code changes after cleanup
+- ✅ Branch is up to date with origin/Rohan-Branch
+
+---
+
+*End of Stage 8 – Bug Fix Complete*
