@@ -1,0 +1,101 @@
+@model Assignment2.LibraryManagement.Item
+
+@{
+    ViewData["Title"] = $"Kiosk - {Model.Name}";
+    bool available = Model.Status == "Available";
+}
+
+<div class="container py-4">
+    <!-- Feedback banner -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h1 class="h2 mb-0">@Model.Name</h1>
+                        <span class="badge @(available ? "bg-success" : "bg-warning text-dark") fs-6 px-3 py-2">
+                            @Model.Status
+                        </span>
+                    </div>
+
+                    <p class="lead text-muted">@Model.Description</p>
+
+                    <dl class="row mt-4">
+                        <dt class="col-sm-3">Library Code</dt>
+                        <dd class="col-sm-9"><code>@Model.LibraryCode</code></dd>
+
+                        @if (Model is Assignment2.LibraryManagement.Book book)
+                        {
+                            <dt class="col-sm-3">Type</dt>
+                            <dd class="col-sm-9">Book</dd>
+                            <dt class="col-sm-3">Author</dt>
+                            <dd class="col-sm-9">@book.Author</dd>
+                            <dt class="col-sm-3">Genre</dt>
+                            <dd class="col-sm-9">@book.Genre</dd>
+                        }
+                        else if (Model is Assignment2.LibraryManagement.Music music)
+                        {
+                            <dt class="col-sm-3">Type</dt>
+                            <dd class="col-sm-9">Music</dd>
+                            <dt class="col-sm-3">Artist</dt>
+                            <dd class="col-sm-9">@music.Artist</dd>
+                            <dt class="col-sm-3">Year</dt>
+                            <dd class="col-sm-9">@music.Year</dd>
+                        }
+                        else if (Model is Assignment2.LibraryManagement.Toy toy)
+                        {
+                            <dt class="col-sm-3">Type</dt>
+                            <dd class="col-sm-9">Toy</dd>
+                            <dt class="col-sm-3">Toy Type</dt>
+                            <dd class="col-sm-9">@toy.Type</dd>
+                            <dt class="col-sm-3">Age Group</dt>
+                            <dd class="col-sm-9">@toy.AgeGroup</dd>
+                        }
+                    </dl>
+
+                    <!-- Availability message + action -->
+                    @if (available)
+                    {
+                        <div class="alert alert-success mt-4" role="status">
+                            <i class="bi bi-check-circle me-2"></i> This item is available to borrow.
+                        </div>
+                        <a href="@Url.Action("Checkout", "Kiosk", new { code = Model.LibraryCode })"
+                           class="btn btn-success btn-lg">
+                            <i class="bi bi-box-arrow-right me-2"></i> Check Out This Item
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mt-4" role="status">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            This item is currently <strong>@Model.Status.ToLower()</strong> and cannot be checked out.
+                        </div>
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="bi bi-box-arrow-right me-2"></i> Check Out Unavailable
+                        </button>
+                    }
+                </div>
+                <div class="card-footer bg-light border-top">
+                    <a href="@Url.Action("Catalogue", "Kiosk")" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i> Back to Catalogue
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

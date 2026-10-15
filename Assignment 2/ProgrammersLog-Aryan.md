@@ -173,4 +173,38 @@ Query params on the list: `name` (partial), `type` (`Book`/`Music`/`Toy`), `stat
 
 ---
 
+## Stage 4 — Kiosk Interface Foundation (2026-10-15)
+
+### Files added
+
+- `Controllers/KioskController.cs` — MVC controller (conventional routing under `/Kiosk`). Actions: `Index` (landing), `Catalogue` (browse/search, reuses `SearchService.SearchItems`), `Item` (detail + availability), `Checkout` GET/POST, `Return` GET/POST, `MyLoans`. `Item`/`Checkout` use explicit route templates (`/Kiosk/Item/{code}`, `/Kiosk/Checkout/{code}`) so codes map to the path segment.
+- `Views/Kiosk/Index.cshtml` — touch-friendly landing page (Browse, Check Out, Return, My Loans + help panel).
+- `Views/Kiosk/Catalogue.cshtml` — browse/search with type filter and availability badges; "Details" links.
+- `Views/Kiosk/Item.cshtml` — item details, type-specific fields, availability badge; "Check Out" button only when `Available` (disabled otherwise).
+- `Views/Kiosk/Checkout.cshtml`, `Return.cshtml`, `MyLoans.cshtml` — self-service forms (antiforgery tokens on POSTs).
+
+### Files changed
+
+- `Views/Shared/_Layout.cshtml` — added a **Kiosk** nav link (the only edit to an existing view). All other existing pages untouched.
+
+### Design notes
+
+- Browsing requires no identification; checkout/return identify the user by `BorrowerId` (the system's existing mechanism — there is no password/auth infrastructure). The kiosk exposes no admin/reception/manager actions.
+- Availability is shown as a badge and a "Check Out" button that is only enabled for `Available` items.
+
+### Verification (actually executed, app on port 5108)
+
+- Build: `dotnet build` → succeeded, 0 errors.
+- `GET /Kiosk` → **200**; `GET /Kiosk/Catalogue` → **200** (7 items); `GET /Kiosk/Item/BOOK001` → **200** (renders details, "Available", enabled Check Out link to `/Kiosk/Checkout/BOOK001`); `GET /Kiosk/Checkout/BOOK001` → **200**; `GET /Kiosk/Return` → **200**; `GET /Kiosk/MyLoans?borrowerId=BR001` → **200**; invalid `Kiosk/Item/NOPE999` → redirects to catalogue with an error banner (**200** after redirect).
+- Regression: `GET /` → **200**, `GET /Search` → **200**, `GET /api/catalogue` → **200**. Existing navigation intact (Kiosk link added).
+- Item detail page visually verified in browser.
+
+### Problems encountered
+
+- Initial `Kiosk/Item/{code}` used conventional `{id?}` routing, so the code landed in the query string and was missed → fixed with an explicit route template. (Caught and corrected within this stage.)
+- Web-mode sample data creates items but no borrowers; a borrower must exist before checkout can succeed (created in Stage 5 via the existing reception workflow for the end-to-end test).
+
+---
+
+
 
