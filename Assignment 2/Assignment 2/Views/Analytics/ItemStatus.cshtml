@@ -1,0 +1,158 @@
+@model Assignment2.LibraryManagement.ItemStatusStatistics
+
+@{
+    ViewData["Title"] = "Item Status Analytics";
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <a href="/Analytics/Dashboard" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+    <h1 class="mb-4">
+        <i class="bi bi-stack"></i> Item Status Analytics
+    </h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Status Distribution</h5>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="bi bi-check-circle text-success"></i> Available</span>
+                            <span class="badge bg-success">@Model.AvailableCount</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.AvailableCount / Model.TotalItemsCount * 100, 1) : 0)%"
+                                 aria-valuenow="@Model.AvailableCount" aria-valuemin="0" aria-valuemax="@Model.TotalItemsCount">
+                                @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.AvailableCount / Model.TotalItemsCount * 100, 1) : 0)%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="bi bi-bookmark text-warning"></i> Borrowed</span>
+                            <span class="badge bg-warning">@Model.BorrowedCount</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.BorrowedCount / Model.TotalItemsCount * 100, 1) : 0)%">
+                                @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.BorrowedCount / Model.TotalItemsCount * 100, 1) : 0)%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="bi bi-exclamation-triangle text-danger"></i> Damaged</span>
+                            <span class="badge bg-danger">@Model.DamagedCount</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.DamagedCount / Model.TotalItemsCount * 100, 1) : 0)%">
+                                @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.DamagedCount / Model.TotalItemsCount * 100, 1) : 0)%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="bi bi-trash text-secondary"></i> Marked for Destroy</span>
+                            <span class="badge bg-secondary">@Model.DestroyCount</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-secondary" role="progressbar" 
+                                 style="width: @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.DestroyCount / Model.TotalItemsCount * 100, 1) : 0)%">
+                                @(Model.TotalItemsCount > 0 ? Math.Round((double)Model.DestroyCount / Model.TotalItemsCount * 100, 1) : 0)%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Summary Statistics</h5>
+                    <table class="table table-striped">
+                        <tr>
+                            <td><strong>Total Items:</strong></td>
+                            <td><strong>@Model.TotalItemsCount</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Available:</td>
+                            <td>
+                                @Model.AvailableCount 
+                                <span class="text-muted">(@(Model.TotalItemsCount > 0 ? Math.Round((double)Model.AvailableCount / Model.TotalItemsCount * 100, 1) : 0)%)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Borrowed:</td>
+                            <td>
+                                @Model.BorrowedCount 
+                                <span class="text-muted">(@(Model.TotalItemsCount > 0 ? Math.Round((double)Model.BorrowedCount / Model.TotalItemsCount * 100, 1) : 0)%)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Damaged:</td>
+                            <td>
+                                @Model.DamagedCount 
+                                <span class="text-muted">(@(Model.TotalItemsCount > 0 ? Math.Round((double)Model.DamagedCount / Model.TotalItemsCount * 100, 1) : 0)%)</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Marked for Destroy:</td>
+                            <td>
+                                @Model.DestroyCount 
+                                <span class="text-muted">(@(Model.TotalItemsCount > 0 ? Math.Round((double)Model.DestroyCount / Model.TotalItemsCount * 100, 1) : 0)%)</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Breakdown by Item Type</h5>
+                    @if (ViewBag.TypeBreakdown != null && ViewBag.TypeBreakdown.Count > 0)
+                    {
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Type</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in ViewBag.TypeBreakdown)
+                                {
+                                    <tr>
+                                        <td><strong>@item.Type</strong></td>
+                                        <td>@item.Count</td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                @Math.Round((double)item.Count / Model.TotalItemsCount * 100, 1)%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No item type breakdown available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

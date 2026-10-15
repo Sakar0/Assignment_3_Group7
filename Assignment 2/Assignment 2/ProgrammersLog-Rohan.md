@@ -871,4 +871,182 @@ Import service fully validated and production-ready for web interface. Tests dem
 
 ---
 
-*End of Stage 5 Validation*
+## Stage 6 – Implement Manager Analytics
+
+**Date:** 2026  
+**Status:** COMPLETE  
+**Build Result:** ✅ Successful  
+**Views Created:** 5 comprehensive analytics dashboards
+
+### Implementation Summary
+
+Created full-featured manager analytics system with multiple dashboard views leveraging existing ManagerService calculations:
+
+#### 1. **AnalyticsController.cs**
+New controller with 5 primary endpoints:
+
+**GET /Analytics/Dashboard** (Main Dashboard)
+- Displays comprehensive library statistics
+- Quick stats cards (total items, borrowers, borrowed, overdue)
+- Catalogue status breakdown with progress bars
+- Borrowing activity summary
+- Fine and overdue management overview
+- Navigation to detailed analytics
+
+**GET /Analytics/Borrowing**
+- Detailed borrowing transaction analysis
+- Currently borrowed count
+- Total transaction count
+- Circulation rate indicator
+- Top 5 most borrowed items with rankings
+- Popularity classification (Very High/High/Medium)
+
+**GET /Analytics/ItemStatus**
+- Item status distribution with progress bars
+- Breakdown by item status (Available, Borrowed, Damaged, Destroy)
+- Percentage calculations
+- Item type breakdown (Book, Music, Toy counts)
+
+**GET /Analytics/Fines**
+- Fine collection and overdue tracking
+- Total fines collected
+- Late return analysis
+- Overdue items and amounts
+- Recovery rate metrics
+- Compliance calculations (on-time return percentage)
+
+**GET /Analytics/ByType**
+- Detailed breakdown by item type:
+  - Books by Genre (sorted by count)
+  - Music by Artist (sorted by count)
+  - Toys by Age Group (sorted by count)
+- Percentage distribution with visual progress bars
+
+#### 2. **Views/Analytics/Dashboard.cshtml**
+Main landing dashboard featuring:
+- Generated timestamp
+- Quick stat cards with color coding
+- Catalogue status section with 4-way progress breakdown
+- Borrowing activity overview
+- Most borrowed items top 5 table
+- Fine & overdue management cards
+- Navigation cards to 4 detailed analytics pages
+- Bootstrap styling with hover effects
+
+#### 3. **Views/Analytics/ItemStatus.cshtml**
+Detailed item status view with:
+- Status distribution chart (4 progress bars)
+- Summary statistics table
+- Item type breakdown by count and percentage
+- Color-coded status badges
+- Responsive layout
+
+#### 4. **Views/Analytics/Borrowing.cshtml**
+Borrowing analytics view with:
+- Key metrics (currently borrowed, transactions, circulation rate)
+- Top 5 most borrowed items table with:
+  - Rank indicators (🥇🥈🥉)
+  - Item name and library code
+  - Borrow count badge
+  - Popularity classification
+- Empty state handling
+
+#### 5. **Views/Analytics/Fines.cshtml**
+Fine and overdue tracking view with:
+- Revenue section (total fines, average fine)
+- Current overdue status section (color-coded by severity)
+- Late return analysis progress bars
+- Key metrics (recovery rate, compliance %)
+- Visual indicators for on-time/late returns
+
+#### 6. **Views/Analytics/ByType.cshtml**
+Item type breakdown view with:
+- Books by Genre table with progress bars
+- Music by Artist table with progress bars
+- Toys by Age Group table with progress bars
+- Percentage calculations for each category
+- Color-coded sections (blue/green/yellow)
+
+#### 3. **Navigation Update**
+- Added "Analytics" link to main navigation
+- Positioned between Catalogue and Import for logical flow
+- Consistent with existing navigation styling
+
+### Data Integration
+
+**Reuses Existing ManagerService Methods:**
+- `GetComprehensiveStatistics()` – all stats in one call
+- `GetBorrowingStatistics()` – borrowing metrics
+- `GetItemStatusStatistics()` – status breakdown
+- `GetFineStatistics()` – fine tracking
+- No duplication; all calculations reused
+
+**Data Sources:**
+- `Item.AllItems` – catalogue items
+- `Borrower.AllBorrowers` – borrower data
+- `BorrowRecord.AllBorrowRecords` – borrowing history
+- All calculations performed in-memory from existing collections
+
+### Design Features
+
+✅ **User Experience:**
+- Color-coded badges and progress bars
+- Professional Bootstrap card layout
+- Responsive grid system
+- Clear section hierarchy
+- Hover effects on stat cards
+- Icons for visual guidance
+
+✅ **Data Visualization:**
+- Stacked progress bars for status distribution
+- Percentage calculations with rounding
+- Top 5 tables with ranking icons
+- Badge indicators for severity/popularity
+
+✅ **Empty State Handling:**
+- "No data" messages for empty datasets
+- Graceful degradation if no transactions
+- Percentage calculations prevent division errors
+
+### Files Created
+
+- `Assignment 2/Controllers/AnalyticsController.cs` (150+ lines)
+- `Assignment 2/Views/Analytics/Dashboard.cshtml`
+- `Assignment 2/Views/Analytics/ItemStatus.cshtml`
+- `Assignment 2/Views/Analytics/Borrowing.cshtml`
+- `Assignment 2/Views/Analytics/Fines.cshtml`
+- `Assignment 2/Views/Analytics/ByType.cshtml`
+
+### Files Modified
+
+- `Assignment 2/Views/Shared/_Layout.cshtml` – Added Analytics navigation link
+
+### Testing Performed
+
+✅ Build successful with no warnings  
+✅ All .cshtml views compile correctly  
+✅ Navigation links functional  
+✅ Controller endpoints created successfully  
+✅ Bootstrap grid and styling applied  
+
+### Known Limitations & Future Enhancements
+
+1. **No Authentication:** All analytics accessible to all users
+   - Recommendation: Apply `[Authorize]` decorator to controller in production
+
+2. **Real-time Data:** Dashboard reflects current data only
+   - No historical trending (could be added with date range filters)
+
+3. **No Chart Library:** Charts implemented with CSS progress bars
+   - Could enhance with Chart.js or similar for more sophisticated visualizations
+
+4. **Performance:** No pagination on large datasets
+   - Current implementation queries full collections; acceptable for library scale
+
+### Next Stage Readiness
+
+Manager analytics dashboard fully implemented and ready for reporting features in Stage 7 (CSV/PDF exports).
+
+---
+
+*End of Stage 6 Implementation*

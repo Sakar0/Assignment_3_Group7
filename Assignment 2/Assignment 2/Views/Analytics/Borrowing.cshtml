@@ -1,0 +1,128 @@
+@model Assignment2.LibraryManagement.BorrowingStatistics
+
+@{
+    ViewData["Title"] = "Borrowing Analytics";
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <a href="/Analytics/Dashboard" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+    <h1 class="mb-4">
+        <i class="bi bi-book"></i> Borrowing Analytics
+    </h1>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase">Currently Borrowed</h6>
+                    <div style="font-size: 3rem; font-weight: bold; color: #198754;">
+                        @Model.CurrentlyBorrowedCount
+                    </div>
+                    <small class="text-muted">items in circulation</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase">Total Transactions</h6>
+                    <div style="font-size: 3rem; font-weight: bold; color: #0d6efd;">
+                        @Model.TotalBorrowsCount
+                    </div>
+                    <small class="text-muted">historical borrow records</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase">Circulation Rate</h6>
+                    <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;">
+                        @(Model.TotalBorrowsCount > 0 ? "High" : "Low")
+                    </div>
+                    <small class="text-muted">based on transaction volume</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.MostBorrowedItems.Count > 0)
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-star-fill text-warning"></i> Most Borrowed Items (Top 5)
+                        </h5>
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Item Name</th>
+                                    <th>Library Code</th>
+                                    <th>Times Borrowed</th>
+                                    <th>Popularity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.MostBorrowedItems.Count; i++)
+                                {
+                                    var item = Model.MostBorrowedItems[i];
+                                    var popularity = item.BorrowCount == Model.MostBorrowedItems[0].BorrowCount 
+                                        ? "Very High" 
+                                        : item.BorrowCount > Model.MostBorrowedItems.Average(x => x.BorrowCount)
+                                            ? "High"
+                                            : "Medium";
+                                    var badgeColor = popularity == "Very High" ? "danger" : popularity == "High" ? "warning" : "info";
+
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary" style="font-size: 1rem;">
+                                                @switch(i)
+                                                {
+                                                    case 0:
+                                                        <span>🥇 1st</span>
+                                                        break;
+                                                    case 1:
+                                                        <span>🥈 2nd</span>
+                                                        break;
+                                                    case 2:
+                                                        <span>🥉 3rd</span>
+                                                        break;
+                                                    default:
+                                                        <span>@(i + 1)th</span>
+                                                        break;
+                                                }
+                                            </span>
+                                        </td>
+                                        <td><strong>@item.ItemName</strong></td>
+                                        <td><code>@item.LibraryCode</code></td>
+                                        <td>
+                                            <span class="badge bg-success" style="font-size: 0.95rem;">
+                                                @item.BorrowCount times
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@badgeColor">
+                                                @popularity
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">No Borrowing Data</h4>
+            <p>There are no borrowing transactions recorded yet.</p>
+        </div>
+    }
+</div>
