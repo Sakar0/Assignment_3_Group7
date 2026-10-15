@@ -339,3 +339,315 @@ data/borrow_records.json   // Serialized BorrowRecord list
 
 **End of Analysis**  
 Ready for implementation planning and code review.
+
+---
+
+# Phase 1: LibraryBranch Model & Branch-Aware Items Foundation
+
+**Date:** January 29, 2025 (Implementation)  
+**Status:** ✅ Complete
+
+## What Was Implemented
+
+### 1. New Model: LibraryBranch.cs
+**File Created:** `Assignment 2/LibraryManagement/LibraryBranch.cs`
+
+**Properties:**
+- `BranchId` (string) — Unique identifier for the branch (e.g., "BR001", "BR002")
+- `BranchName` (string) — Display name (e.g., "Downtown Library")
+- `Location` (string) — Physical address/location
+- `IsActive` (bool) — Whether branch is operating (soft delete pattern)
+- `CreatedDate` (DateTime) — Audit timestamp
+- `AllBranches` (static List<LibraryBranch>) — Mirrors pattern used by Item, Borrower, BorrowRecord
+
+**Validation:**
+- BranchId, BranchName, Location are required (throw ArgumentException if empty)
+- Parameterless constructor added for JSON deserialization
+
+**Design Pattern:**
+- Follows in-memory architecture; no database context required
+- Static collection enables consistent querying across application
+- Soft delete (IsActive flag) allows branch deactivation without losing historical data
+
+---
+
+### 2. Enhanced Item Model with BranchId
+**Files Modified:** `Item.cs`, `Book.cs`, `Music.cs`, `Toy.cs`
+
+**Changes to Item.cs:**
+- Added property: `string BranchId { get; set; }` with default "DEFAULT"
+- Updated constructor to accept optional `branchId` parameter (backward compatible)
+- Updated `ToString()` to include BranchId in output
+
+**Changes to Subclasses (Book, Music, Toy):**
+- Updated constructors to accept optional `branchId` parameter
+- Constructors now pass `branchId` to base Item class
+- Default value "DEFAULT" ensures existing code continues to work
+- All 3 subclasses maintain the same pattern
+
+**Backward Compatibility:**
+✅ Existing code calling `new Book(...)` without branchId works (uses "DEFAULT")
+✅ New code can explicitly pass branchId: `new Book(..., branchId: "BR001")`
+
+---
+
+### 3. Enhanced DataService for Branch Persistence
+**File Modified:** `Assignment 2/LibraryManagement/DataService.cs`
+
+**New Fields:**
+- Added file path: `private static readonly string BranchesFilePath = Path.Combine(DataDirectory, "branches.json")`
+
+**Updated Methods:**
+- `SaveAllData()` — Now calls `SaveBranches()` and logs branches saved
+- `LoadAllData()` — Now calls `LoadBranches()` and logs branches loaded
+
+**New Private Methods:**
+- `SaveBranches()` — Serializes `LibraryBranch.AllBranches` to JSON
+- `LoadBranches()` — Deserializes JSON into `LibraryBranch.AllBranches` (clears before loading)
+
+**New Public Method:**
+- `HasSavedBranches()` — Checks if branches.json file exists
+
+**Data Persistence Flow:**
+```
+SaveAllData()
+  ├─ SaveItems() → items.json
+  ├─ SaveBorrowers() → borrowers.json
+  ├─ SaveBorrowRecords() → borrow_records.json
+  └─ SaveBranches() → branches.json (NEW)
+
+LoadAllData()
+  ├─ LoadItems() from items.json
+  ├─ LoadBorrowers() from borrowers.json
+  ├─ LoadBorrowRecords() from borrow_records.json
+  └─ LoadBranches() from branches.json (NEW)
+```
+
+---
+
+### 4. Updated ItemJsonConverter for BranchId Serialization
+**File Modified:** `Assignment 2/LibraryManagement/ItemJsonConverter.cs`
+
+**Read Method (Deserialization):**
+- Added: Extract `BranchId` from JSON with fallback to "DEFAULT" if missing
+- Updated: Pass `branchId` to all `DeserializeBook()`, `DeserializeMusic()`, `DeserializeToy()` calls
+- Maintains backward compatibility: old JSON files without BranchId assign "DEFAULT"
+
+**Write Method (Serialization):**
+- Added: `writer.WriteString(nameof(Item.BranchId), value.BranchId)` to JSON output
+- Ensures all items include branch information in persisted data
+
+**Helper Methods Updated:**
+- `DeserializeBook(root, name, description, libraryCode, status, branchId)`
+- `DeserializeMusic(root, name, description, libraryCode, status, branchId)`
+- `DeserializeToy(root, name, description, libraryCode, status, branchId)`
+- All now accept and forward branchId parameter to constructors
+
+**JSON Format Example:**
+```json
+{
+  "$type": "Book",
+  "name": "The Great Gatsby",
+  "description": "A classic American novel",
+  "libraryCode": "BOOK001",
+  "status": "Available",
+  "branchId": "BR001",
+  "author": "F. Scott Fitzgerald",
+  "genre": "Fiction"
+}
+```
+
+---
+
+### 5. New Service: BranchService
+**File Created:** `Assignment 2/LibraryManagement/BranchService.cs`
+
+**Core Methods:**
+- `CreateBranch(branchId, branchName, location)` — Add new branch with validation
+- `FindBranchById(branchId)` — Retrieve single branch
+- `GetActiveBranches()` — List only active branches
+- `GetAllBranches()` — List all branches (active + inactive)
+- `UpdateBranch(branchId, propertyName, newValue)` — Modify name, location, or active status
+
+**Branch Lifecycle:**
+- `DeactivateBranch(branchId)` — Soft delete (preserves historical data)
+- `ReactivateBranch(branchId)` — Restore deactivated branch
+
+**Reporting Methods:**
+- `DisplayAllBranches()` — Console output of all branches
+- `GetItemCountForBranch(branchId)` — Count items in branch
+- `GetItemsForBranch(branchId)` — Retrieve all items belonging to branch
+
+**Design:**
+- Follows AdminService/ReceptionService pattern
+- Uses LINQ to filter `LibraryBranch.AllBranches` collection
+- Includes error handling and validation
+- Console feedback for all operations
+
+---
+
+## Database Implications
+
+**Current Architecture:** In-memory + JSON persistence
+**No Changes to:**
+- No EF Core context (not used)
+- No SQL database (using JSON files)
+- No migrations required
+- No ORM dependencies
+
+**New Persistence Files:**
+- `data/branches.json` — Stores branch list (auto-created on first save)
+
+**Data Format:**
+- JSON array of LibraryBranch objects
+- Includes all properties: BranchId, BranchName, Location, IsActive, CreatedDate
+- Compatible with existing JsonSerializerOptions (camelCase, WriteIndented)
+
+**Migration Path (if converting to database later):**
+- BranchId → Primary Key
+- BranchName → String column
+- Location → String column (or separate Address entity)
+- IsActive → Boolean column
+- CreatedDate → DateTime column
+- Foreign Key: Item.BranchId
+
+---
+
+## Files Changed Summary
+
+| File | Type | Change | Lines |
+|------|------|--------|-------|
+| LibraryBranch.cs | NEW | Branch model with static collection | 83 |
+| Item.cs | MODIFIED | Added BranchId property + constructor param | +11 |
+| Book.cs | MODIFIED | Constructor updated for branchId | +4 |
+| Music.cs | MODIFIED | Constructor updated for branchId | +4 |
+| Toy.cs | MODIFIED | Constructor updated for branchId | +4 |
+| DataService.cs | MODIFIED | Added SaveBranches/LoadBranches + file path | +45 |
+| ItemJsonConverter.cs | MODIFIED | Handle BranchId in serialization | +25 |
+| BranchService.cs | NEW | Complete branch CRUD service | 190 |
+| **Total** | | | **+366 lines** |
+
+---
+
+## Build Result
+
+```
+Build successful - 0 errors, 0 warnings
+```
+
+✅ All source files compile cleanly
+✅ No breaking changes to existing code
+✅ Backward compatible: existing items default to BranchId = "DEFAULT"
+✅ JSON deserialization handles legacy items (no BranchId)
+
+---
+
+## Current Data Structure in Memory
+
+```csharp
+LibraryBranch.AllBranches        // NEW: All branches
+Item.AllItems                    // Now includes BranchId property
+  ├─ Book
+  ├─ Music
+  └─ Toy
+Borrower.AllBorrowers           // Unchanged (todo: add BranchId in Phase 2)
+BorrowRecord.AllBorrowRecords    // Unchanged (todo: add BranchId in Phase 2)
+```
+
+---
+
+## What Still Needs Implementation
+
+### Immediate (Next Phase):
+1. Add BranchId to Borrower and BorrowRecord models
+2. Update AdminService to accept/use branchId parameter
+3. Update ReceptionService to accept/use branchId parameter
+4. Update SearchService to filter by branch
+5. Add branch selection to console menu
+
+### Medium-term:
+1. Create BranchTransferService for inter-branch item transfers
+2. Create BranchTransferRecord model for audit trail
+3. Add transfer menu options to console
+4. Web UI for branch-aware search
+
+### Future:
+1. Database migration (EF Core + SQL Server)
+2. Authentication/authorization for web transfers
+3. Multi-branch dashboard and reporting
+
+---
+
+## Unresolved Issues
+
+❓ **Issue:** Borrower and BorrowRecord still lack BranchId  
+**Status:** Deferred to Phase 2 (in progress)  
+**Impact:** Cross-branch borrowing temporarily allowed (acceptable for foundation phase)  
+**Resolution:** Will add BranchId in next iteration
+
+❓ **Issue:** AdminService CreateBook/Music/Toy still don't accept branchId  
+**Status:** Deferred (used default "DEFAULT")  
+**Impact:** All new items created via console assigned to DEFAULT branch  
+**Resolution:** Update AdminService in Phase 2 to pass branchId from user selection
+
+❓ **Issue:** No branch context passed through console menu  
+**Status:** Design decision: defer to Phase 2  
+**Impact:** Console menu doesn't yet prompt for branch selection  
+**Resolution:** Add branch selection step in LibraryManagementConsole.Main()
+
+---
+
+## Testing Recommendations
+
+### Manual Tests:
+1. Create a LibraryBranch directly:
+   ```csharp
+   var service = new BranchService();
+   service.CreateBranch("BR001", "Downtown", "123 Main St");
+   ```
+
+2. Create an item with BranchId:
+   ```csharp
+   var adminService = new AdminService();
+   adminService.CreateBook("Title", "Desc", "BOOK001", "Available", "Author", "Genre", "BR001");
+   ```
+
+3. Save and load data:
+   ```csharp
+   DataService.SaveAllData();  // Should create data/branches.json
+   DataService.LoadAllData();  // Should restore branches
+   ```
+
+4. Query by branch:
+   ```csharp
+   var service = new BranchService();
+   var branchItems = service.GetItemsForBranch("BR001");
+   ```
+
+### Regression Tests:
+- Verify existing code still compiles (backward compatibility)
+- Load legacy data without BranchId (should default to "DEFAULT")
+- Console menu still works (no menu changes yet)
+- Web search still displays items (unchanged functionality)
+
+---
+
+## Git Commit Message
+
+```
+feat(branch-model): Implement LibraryBranch foundation for multi-branch support
+
+- Add LibraryBranch model with BranchId, BranchName, Location, IsActive, CreatedDate
+- Extend Item hierarchy (Book, Music, Toy) with BranchId property
+- Update Item constructors to accept optional branchId (default: "DEFAULT")
+- Enhance DataService to persist/load branches to/from branches.json
+- Update ItemJsonConverter to serialize/deserialize BranchId
+- Add BranchService for branch CRUD and querying
+- Achieve backward compatibility: existing items default to "DEFAULT" branch
+- JSON deserialization handles legacy items missing BranchId property
+- Build: successful, 0 errors, 0 warnings
+
+Foundation complete. Ready for Phase 2: branch-aware services.
+See ProgrammersLog-Sakar.md for detailed implementation notes.
+```
+

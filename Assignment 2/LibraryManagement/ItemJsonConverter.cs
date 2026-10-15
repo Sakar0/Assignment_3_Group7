@@ -36,13 +36,16 @@ namespace Assignment2.LibraryManagement
                 string description = root.GetProperty(nameof(Item.Description)).GetString() ?? string.Empty;
                 string libraryCode = root.GetProperty(nameof(Item.LibraryCode)).GetString() ?? string.Empty;
                 string status = root.GetProperty(nameof(Item.Status)).GetString() ?? "Available";
+                string branchId = root.TryGetProperty(nameof(Item.BranchId), out JsonElement branchElement) 
+                    ? branchElement.GetString() ?? "DEFAULT" 
+                    : "DEFAULT";
 
                 // Create the appropriate item type based on discriminator
                 return itemType switch
                 {
-                    "Book" => DeserializeBook(root, name, description, libraryCode, status),
-                    "Music" => DeserializeMusic(root, name, description, libraryCode, status),
-                    "Toy" => DeserializeToy(root, name, description, libraryCode, status),
+                    "Book" => DeserializeBook(root, name, description, libraryCode, status, branchId),
+                    "Music" => DeserializeMusic(root, name, description, libraryCode, status, branchId),
+                    "Toy" => DeserializeToy(root, name, description, libraryCode, status, branchId),
                     _ => throw new JsonException($"Unknown item type: {itemType}")
                 };
             }
@@ -65,6 +68,7 @@ namespace Assignment2.LibraryManagement
             writer.WriteString(nameof(Item.Description), value.Description);
             writer.WriteString(nameof(Item.LibraryCode), value.LibraryCode);
             writer.WriteString(nameof(Item.Status), value.Status);
+            writer.WriteString(nameof(Item.BranchId), value.BranchId);
 
             // Write type-specific properties
             if (value is Book book)
@@ -89,34 +93,35 @@ namespace Assignment2.LibraryManagement
         /// <summary>
         /// Deserialize a Book item from JSON element
         /// </summary>
-        private Book DeserializeBook(JsonElement root, string name, string description, string libraryCode, string status)
+        private Book DeserializeBook(JsonElement root, string name, string description, string libraryCode, string status, string branchId)
         {
             string author = root.GetProperty(nameof(Book.Author)).GetString() ?? string.Empty;
             string genre = root.GetProperty(nameof(Book.Genre)).GetString() ?? string.Empty;
 
-            return new Book(name, description, libraryCode, status, author, genre);
+            return new Book(name, description, libraryCode, status, author, genre, branchId);
         }
 
         /// <summary>
         /// Deserialize a Music item from JSON element
         /// </summary>
-        private Music DeserializeMusic(JsonElement root, string name, string description, string libraryCode, string status)
+        private Music DeserializeMusic(JsonElement root, string name, string description, string libraryCode, string status, string branchId)
         {
             string artist = root.GetProperty(nameof(Music.Artist)).GetString() ?? string.Empty;
             int year = root.GetProperty(nameof(Music.Year)).GetInt32();
 
-            return new Music(name, description, libraryCode, status, artist, year);
+            return new Music(name, description, libraryCode, status, artist, year, branchId);
         }
 
         /// <summary>
         /// Deserialize a Toy item from JSON element
         /// </summary>
-        private Toy DeserializeToy(JsonElement root, string name, string description, string libraryCode, string status)
+        private Toy DeserializeToy(JsonElement root, string name, string description, string libraryCode, string status, string branchId)
         {
             string toyType = root.GetProperty(nameof(Toy.Type)).GetString() ?? string.Empty;
             string ageGroup = root.GetProperty(nameof(Toy.AgeGroup)).GetString() ?? string.Empty;
 
-            return new Toy(name, description, libraryCode, status, toyType, ageGroup);
+            return new Toy(name, description, libraryCode, status, toyType, ageGroup, branchId);
         }
     }
 }
+

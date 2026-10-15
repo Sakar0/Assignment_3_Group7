@@ -15,17 +15,21 @@ namespace Assignment2.LibraryManagement
         public string LibraryCode { get; set; }    // Unique identifier (like BOOK001)
         public string Status { get; set; }         // Available, Borrowed, Damaged, or Destroy
 
+        // Branch information - identifies which branch owns this item
+        public string BranchId { get; set; }       // Which branch this item belongs to (e.g., "BR001")
+
         // Shared list - stores ALL items from the entire library (Books + Music + Toys)
         public static List<Item> AllItems { get; } = new List<Item>();
 
         /// <summary>
         /// Constructor - called by derived classes (Book, Music, Toy)
         /// </summary>
-        protected Item(string name, string description, string libraryCode, string status)
+        protected Item(string name, string description, string libraryCode, string status, string branchId = "DEFAULT")
         {
             Name = name;
             Description = description;
             LibraryCode = libraryCode;
+            BranchId = branchId ?? "DEFAULT";
 
             // Check that status is one of the valid options
             ValidateStatus(status);
@@ -66,7 +70,7 @@ namespace Assignment2.LibraryManagement
         /// </summary>
         public override string ToString()
         {
-            return $"Name: {Name}, Description: {Description}, LibraryCode: {LibraryCode}, Status: {Status}";
+            return $"Name: {Name}, Description: {Description}, LibraryCode: {LibraryCode}, Status: {Status}, BranchId: {BranchId}";
         }
     }
 }
