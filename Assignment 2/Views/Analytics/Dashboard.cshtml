@@ -1,0 +1,330 @@
+@model Assignment2.LibraryManagement.LibraryStatistics
+
+@{
+    ViewData["Title"] = "Manager Analytics Dashboard";
+}
+
+<style>
+    .stat-card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .dashboard-header {
+        margin-bottom: 30px;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 15px;
+    }
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .progress-item {
+        margin-bottom: 15px;
+    }
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container-fluid mt-4 mb-5">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1 class="mb-2">
+            <i class="bi bi-graph-up"></i> Manager Analytics Dashboard
+        </h1>
+        <p class="text-muted mb-0">
+            <i class="bi bi-calendar"></i> Generated: @DateTime.Now.ToString("MMMM dd, yyyy 'at' h:mm tt")
+        </p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Total Items</div>
+                    <div class="stat-value text-primary">@Model.TotalItems</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Registered Borrowers</div>
+                    <div class="stat-value text-success">@Model.TotalBorrowers</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Currently Borrowed</div>
+                    <div class="stat-value text-warning">@Model.BorrowingStats.CurrentlyBorrowedCount</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Overdue Items</div>
+                    <div class="stat-value @(Model.FineStats.TotalOverdueItems > 0 ? "text-danger" : "text-success")">
+                        @Model.FineStats.TotalOverdueItems
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalogue Status -->
+    <h3 class="section-title">Catalogue Status</h3>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Items by Status</h5>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span><i class="bi bi-check-circle text-success"></i> Available</span>
+                            <span>@Model.ItemStatusStats.AvailableCount (@(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.AvailableCount / Model.TotalItems * 100, 1) : 0)%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.AvailableCount / Model.TotalItems * 100, 1) : 0)%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span><i class="bi bi-bookmark text-warning"></i> Borrowed</span>
+                            <span>@Model.ItemStatusStats.BorrowedCount (@(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.BorrowedCount / Model.TotalItems * 100, 1) : 0)%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: @(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.BorrowedCount / Model.TotalItems * 100, 1) : 0)%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span><i class="bi bi-exclamation-triangle text-danger"></i> Damaged</span>
+                            <span>@Model.ItemStatusStats.DamagedCount (@(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.DamagedCount / Model.TotalItems * 100, 1) : 0)%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: @(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.DamagedCount / Model.TotalItems * 100, 1) : 0)%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span><i class="bi bi-trash text-secondary"></i> Marked for Destroy</span>
+                            <span>@Model.ItemStatusStats.DestroyCount (@(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.DestroyCount / Model.TotalItems * 100, 1) : 0)%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-secondary" role="progressbar" 
+                                 style="width: @(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.DestroyCount / Model.TotalItems * 100, 1) : 0)%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Summary</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>Available:</strong> @Model.ItemStatusStats.AvailableCount / @Model.TotalItems items
+                        </li>
+                        <li class="mb-2">
+                            <strong>Utilization Rate:</strong> 
+                            @(Model.TotalItems > 0 ? Math.Round((double)Model.ItemStatusStats.BorrowedCount / Model.TotalItems * 100, 1) : 0)%
+                        </li>
+                        <li class="mb-2">
+                            <strong>Condition:</strong> 
+                            @(Model.ItemStatusStats.DamagedCount + Model.ItemStatusStats.DestroyCount) items need attention
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrowing Activity -->
+    <h3 class="section-title">Borrowing Activity</h3>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Currently Borrowed</h6>
+                    <div class="stat-value">@Model.BorrowingStats.CurrentlyBorrowedCount</div>
+                    <small class="text-muted">items in circulation</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Transactions</h6>
+                    <div class="stat-value">@Model.BorrowingStats.TotalBorrowsCount</div>
+                    <small class="text-muted">historical borrows</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Avg Borrow Rate</h6>
+                    <div class="stat-value">
+                        @(Model.BorrowingStats.TotalBorrowsCount > 0 ? 
+                            Math.Round((double)Model.BorrowingStats.TotalBorrowsCount / Math.Max(1, Model.TotalItems), 2) 
+                            : 0)
+                    </div>
+                    <small class="text-muted">borrows per item</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.BorrowingStats.MostBorrowedItems.Count > 0)
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Most Borrowed Items (Top 5)</h5>
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Item Name</th>
+                                    <th>Library Code</th>
+                                    <th>Times Borrowed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.BorrowingStats.MostBorrowedItems.Count; i++)
+                                {
+                                    var item = Model.BorrowingStats.MostBorrowedItems[i];
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">@(i + 1)</span>
+                                        </td>
+                                        <td><strong>@item.ItemName</strong></td>
+                                        <td><code>@item.LibraryCode</code></td>
+                                        <td><span class="badge bg-success">@item.BorrowCount</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Fine Statistics -->
+    <h3 class="section-title">Fine & Overdue Management</h3>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Total Fines Collected</div>
+                    <div class="stat-value text-success">${@Model.FineStats.TotalFinesCollected:F2}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Late Returns</div>
+                    <div class="stat-value text-warning">@Model.FineStats.LateReturnCount</div>
+                    <small class="text-muted">
+                        (@(Model.FineStats.CompletedBorrowsCount > 0 ? 
+                            Math.Round((double)Model.FineStats.LateReturnCount / Model.FineStats.CompletedBorrowsCount * 100, 1) 
+                            : 0)% of completed)
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Average Fine</div>
+                    <div class="stat-value text-info">${@Model.FineStats.AverageFine:F2}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="stat-label">Current Overdue Amount</div>
+                    <div class="stat-value @(Model.FineStats.CurrentOverdueAmount > 0 ? "text-danger" : "text-success")">
+                        $@Model.FineStats.CurrentOverdueAmount:F2
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Links to Detailed Views -->
+    <h3 class="section-title">Detailed Analytics</h3>
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <a href="/Analytics/ItemStatus" class="card text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-stack" style="font-size: 2rem; color: #0d6efd;"></i>
+                    <h5 class="mt-3">Item Status</h5>
+                    <small class="text-muted">Detailed item breakdown by status</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="/Analytics/Borrowing" class="card text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-book" style="font-size: 2rem; color: #198754;"></i>
+                    <h5 class="mt-3">Borrowing</h5>
+                    <small class="text-muted">Borrowing patterns and statistics</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="/Analytics/Fines" class="card text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-coin" style="font-size: 2rem; color: #ffc107;"></i>
+                    <h5 class="mt-3">Fines</h5>
+                    <small class="text-muted">Fines and overdue tracking</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="/Analytics/ByType" class="card text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-diagram-3" style="font-size: 2rem; color: #0dcaf0;"></i>
+                    <h5 class="mt-3">By Type</h5>
+                    <small class="text-muted">Breakdown by item type and category</small>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

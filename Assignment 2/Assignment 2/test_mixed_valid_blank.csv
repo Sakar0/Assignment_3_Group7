@@ -1,0 +1,7 @@
+Type,Name,Description,LibraryCode,Status,Author,Genre,Artist,Year,ToyType,AgeGroup
+Book,"Valid Book 1","First book",BOOK_V1,Available,"Author 1","Genre 1",,,
+
+Book,"Valid Book 2","Second book",BOOK_V2,Available,"Author 2","Genre 2",,,
+Music,"Valid Album","Test album",MUSIC_V1,Available,,,"Artist 1",2020,,
+
+Toy,"Valid Toy","Test toy",TOY_V1,Available,,,,,Building,3-8

@@ -1,0 +1,165 @@
+@{
+    ViewData["Title"] = "Export Reports";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-file-export"></i> Export Manager Reports
+            </h1>
+            <p class="text-muted">Download library analytics and statistics in various formats for further analysis and presentations.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Comprehensive Analytics CSV -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-table text-primary" style="font-size: 2rem;"></i>
+                        <h5 class="card-title ms-3 mb-0">Comprehensive Analytics Report</h5>
+                    </div>
+                    <p class="card-text text-muted">
+                        Download a complete analytics report including overall statistics, item status breakdown, borrowing activity, and fine management data.
+                    </p>
+                    <p class="small text-secondary">
+                        <strong>Format:</strong> CSV (Excel-compatible)<br />
+                        <strong>Contents:</strong> 7 sections with 25+ metrics
+                    </p>
+                    <a href="/Export/DownloadCsv" class="btn btn-primary mt-3">
+                        <i class="fas fa-download"></i> Download CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Type Breakdown CSV -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-layer-group text-success" style="font-size: 2rem;"></i>
+                        <h5 class="card-title ms-3 mb-0">Item Type Breakdown</h5>
+                    </div>
+                    <p class="card-text text-muted">
+                        Detailed breakdown of library items grouped by type: Books by Genre, Music by Artist, and Toys by Age Group.
+                    </p>
+                    <p class="small text-secondary">
+                        <strong>Format:</strong> CSV (Excel-compatible)<br />
+                        <strong>Contents:</strong> 3 category tables with counts
+                    </p>
+                    <a href="/Export/DownloadItemBreakdownCsv" class="btn btn-success mt-3">
+                        <i class="fas fa-download"></i> Download CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Report (Plain Text) -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-file-alt text-info" style="font-size: 2rem;"></i>
+                        <h5 class="card-title ms-3 mb-0">Text Report (Plain Text)</h5>
+                    </div>
+                    <p class="card-text text-muted">
+                        Professional formatted text report for viewing, printing, or manual PDF conversion. Includes neat borders and sections.
+                    </p>
+                    <p class="small text-secondary">
+                        <strong>Format:</strong> Plain Text (.txt)<br />
+                        <strong>Contents:</strong> Formatted summary with visual layout
+                    </p>
+                    <a href="/Export/DownloadTextReport" class="btn btn-info mt-3">
+                        <i class="fas fa-download"></i> Download TXT
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Text Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-eye text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="card-title ms-3 mb-0">View Text Report</h5>
+                    </div>
+                    <p class="card-text text-muted">
+                        View the text report directly in your browser before downloading. Useful for quick review of key metrics and statistics.
+                    </p>
+                    <p class="small text-secondary">
+                        <strong>Format:</strong> Browser view<br />
+                        <strong>Contents:</strong> Real-time current data
+                    </p>
+                    <a href="/Export/ViewTextReport" class="btn btn-warning mt-3">
+                        <i class="fas fa-eye"></i> View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information Section -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-info-circle"></i> Export Information
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>CSV Format:</strong> Files are comma-separated and fully compatible with Microsoft Excel, Google Sheets, and other spreadsheet applications.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Timestamps:</strong> Each export includes a generation timestamp for audit and record-keeping purposes.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Current Data:</strong> All reports reflect the current state of the library system at the time of export.
+                        </li>
+                        <li class="mb-2">
+                            <strong>PDF Support:</strong> Text reports can be printed to PDF using your browser's print functionality (Ctrl+P > Save as PDF).
+                        </li>
+                        <li>
+                            <strong>No Size Limitations:</strong> Reports can handle libraries of any size within system memory constraints.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links Section -->
+    <div class="row mt-4 mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-info" role="alert">
+                <strong>💡 Tip:</strong> Combine CSV exports with Excel for advanced data analysis, pivot tables, and custom charts. Use the text report for quick performance reviews and board presentations.
+            </div>
+        </div>
+    </div>
+
+    <!-- Return to Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-12 text-center">
+            <a href="/Analytics/Dashboard" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Analytics Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .btn {
+        transition: all 0.3s ease;
+    }
+</style>

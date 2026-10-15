@@ -1,0 +1,2 @@
+Type,Name,Description,LibraryCode,Status,Author,Genre,Artist,Year,ToyType,AgeGroup
+Book,"Duplicate Code Test","Should fail",BOOK001,Available,"Author","Genre",,,
