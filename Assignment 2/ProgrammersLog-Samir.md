@@ -227,25 +227,36 @@ This implementation will add three interconnected features to the existing Libra
 
 - ✓ Stage 0.1-0.5: Repository inspection, baseline established
 - ✓ Stage 1: Created implementation plan
-- **Stage 2: IN PROGRESS** — Creating reservation data models and persistence
+- ✓ Stage 2: Reservation data models and persistence
+- **Stage 3: IN PROGRESS** — Reservation services and validation
 
-### Current Work (Stage 2)
+### Current Work (Stage 3)
 
 **Completed:**
-- Created `Reservation.cs` model with fields: ReservationId, BorrowerId, ItemLibraryCode, ReservationDate, Status (Pending/Fulfilled/Cancelled), ExpiryDate
-- Created `WaitlistEntry.cs` model with fields: WaitlistEntryId, BorrowerId, ItemLibraryCode, QueuePosition, CreatedDate, Status, OfferExpiryDate
-- Created `Notification.cs` model with fields: NotificationId, RecipientBorrowerId, Message, Type, CreatedDate, IsRead, ReadDate, and optional context fields
-- Extended `DataService.cs` with Save/Load methods for all three new types
-- All models follow existing conventions with static collections and validation
+- Created `ReservationService.cs` with:
+  - ID generation: GenerateReservationId()
+  - Validation helpers: IsItemValid(), IsBorrowerValid(), IsItemAvailable()
+  - Retrieval methods: GetReservationsByBorrower(), GetReservationById(), GetReservationsByItem(), GetActiveReservationsByBorrower(), GetActiveReservationsByItem()
+  - Duplicate check: FindActiveReservationForItem(), HasActiveReservation()
+  - Create operation: CreateReservation() with full validation
+  - Cancel operation: CancelReservation() with authorization checks
+  - Fulfill operation: FulfillReservation() helper
 - Build verified: ✓ SUCCESSFUL
 
+**Key Features:**
+- ✓ Prevents duplicate active reservations (same user, same item)
+- ✓ Validates item exists and is unavailable
+- ✓ Validates borrower exists
+- ✓ Authorization: only reservation owner can cancel
+- ✓ Meaningful error messages via ArgumentException
+- ✓ Follows existing service patterns (static class, LINQ queries)
+
 **Pending:**
-- Stage 2 final verification and commit
-- Stages 3-8 implementation
+- Stage 3 final commit
+- Stages 4-8 implementation
 
 ### Upcoming Stages
 
-- **Stage 3:** Reservation services and validation
 - **Stage 4:** Reservation MVC interface
 - **Stage 5:** Waitlist workflow
 - **Stage 6:** Notification system
@@ -267,8 +278,8 @@ This implementation will add three interconnected features to the existing Libra
 
 | Hash | Stage | Message | Status |
 |------|-------|---------|--------|
-| (pending) | 1 | `docs: document reservation and notification implementation plan` | Pending |
-| (pending) | 2 | `feat: add reservation models and persistence` | Pending |
+| `b3b8ebe` | 1 | `docs: document reservation and notification implementation plan` | ✓ Pushed |
+| `ed49726` | 2 | `feat: add reservation models and persistence` | ✓ Pushed |
 | (pending) | 3 | `feat: implement reservation workflow and validation` | Pending |
 | (pending) | 4 | `feat: add reservation management interface` | Pending |
 | (pending) | 5 | `feat: implement item waitlist and queue processing` | Pending |
