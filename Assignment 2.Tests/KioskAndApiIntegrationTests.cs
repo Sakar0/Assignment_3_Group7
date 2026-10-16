@@ -3,6 +3,10 @@ using Assignment2.Controllers;
 using Assignment2.Controllers.Api;
 using Assignment2.Models.Api;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Routing;
 using Xunit;
 using System.Collections.Generic;
 using System.Linq;
@@ -128,6 +132,7 @@ namespace Assignment2.Tests
             InitializeTestData();
 
             var controller = new KioskController();
+            SetupControllerContext(controller);
             var result = controller.Checkout("BOOK001", "BR001");
 
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
@@ -149,6 +154,7 @@ namespace Assignment2.Tests
             InitializeTestData();
 
             var controller = new KioskController();
+            SetupControllerContext(controller);
             var result = controller.Checkout("BOOK001", "INVALID999");
 
             Assert.IsType<RedirectToActionResult>(result);
@@ -168,6 +174,7 @@ namespace Assignment2.Tests
             item.SetStatus("Borrowed");
 
             var controller = new KioskController();
+            SetupControllerContext(controller);
             var result = controller.Checkout("BOOK002");
 
             // Should redirect with error
@@ -187,6 +194,7 @@ namespace Assignment2.Tests
             BorrowRecord.AllBorrowRecords.Add(borrowRecord);
 
             var controller = new KioskController();
+            SetupControllerContext(controller);
             var result = controller.Return("BOOK002");
 
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
@@ -206,6 +214,7 @@ namespace Assignment2.Tests
             InitializeTestData();
 
             var controller = new KioskController();
+            SetupControllerContext(controller);
             var result = controller.Return("BOOK001"); // BOOK001 never borrowed
 
             Assert.IsType<ViewResult>(result);
@@ -346,5 +355,44 @@ namespace Assignment2.Tests
             var borrower = new Borrower("BR001", "John Doe", "555-1234", "john@example.com");
             Borrower.AllBorrowers.Add(borrower);
         }
+
+        /// <summary>
+        /// Helper: Set up TempData and ControllerContext on a controller for unit testing.
+        /// </summary>
+        private static void SetupControllerContext(Controller controller)
+        {
+            var httpContext = new DefaultHttpContext();
+            var tempData = new TempDataDictionary(httpContext, new MockTempDataProvider());
+
+            var controllerContext = new ControllerContext(
+                new ActionContext(
+                    httpContext,
+                    new RouteData(),
+                    new ControllerActionDescriptor()
+                )
+            );
+
+            controller.ControllerContext = controllerContext;
+            controller.TempData = tempData;
+        }
+    }
+
+    /// <summary>
+    /// Simple mock TempData provider for unit tests.
+    /// </summary>
+    public class MockTempDataProvider : ITempDataProvider
+    {
+        private IDictionary<string, object?> _data = new Dictionary<string, object?>();
+
+        public void SaveTempData(HttpContext context, IDictionary<string, object?> values)
+        {
+            _data = values;
+        }
+
+        public IDictionary<string, object?> LoadTempData(HttpContext context)
+        {
+            return _data;
+        }
     }
 }
+
