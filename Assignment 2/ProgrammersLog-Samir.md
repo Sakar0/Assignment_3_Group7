@@ -228,36 +228,38 @@ This implementation will add three interconnected features to the existing Libra
 - ✓ Stage 0.1-0.5: Repository inspection, baseline established
 - ✓ Stage 1: Created implementation plan
 - ✓ Stage 2: Reservation data models and persistence
-- **Stage 3: IN PROGRESS** — Reservation services and validation
+- ✓ Stage 3: Reservation services and validation
+- **Stage 4: IN PROGRESS** — Reservation MVC interface
 
-### Current Work (Stage 3)
+### Current Work (Stage 4)
 
 **Completed:**
-- Created `ReservationService.cs` with:
-  - ID generation: GenerateReservationId()
-  - Validation helpers: IsItemValid(), IsBorrowerValid(), IsItemAvailable()
-  - Retrieval methods: GetReservationsByBorrower(), GetReservationById(), GetReservationsByItem(), GetActiveReservationsByBorrower(), GetActiveReservationsByItem()
-  - Duplicate check: FindActiveReservationForItem(), HasActiveReservation()
-  - Create operation: CreateReservation() with full validation
-  - Cancel operation: CancelReservation() with authorization checks
-  - Fulfill operation: FulfillReservation() helper
+- Created `ReservationController.cs` with actions:
+  - Index(borrowerId): List/filter user reservations
+  - Create GET/POST: Form to create new reservations
+  - Details(reservationId, borrowerId): View reservation details (with auth check)
+  - Cancel POST: Cancel pending reservations (with owner-only auth)
+- Created Razor views:
+  - `Index.cshtml`: Lists borrower's reservations with status badges and actions
+  - `Create.cshtml`: Form for creating reservations with borrower/item selection
+  - `Details.cshtml`: Full reservation details with borrower info, item info, cancel option
+- Updated `_Layout.cshtml`: Added "My Reservations" navigation link
 - Build verified: ✓ SUCCESSFUL
 
 **Key Features:**
-- ✓ Prevents duplicate active reservations (same user, same item)
-- ✓ Validates item exists and is unavailable
-- ✓ Validates borrower exists
-- ✓ Authorization: only reservation owner can cancel
-- ✓ Meaningful error messages via ArgumentException
-- ✓ Follows existing service patterns (static class, LINQ queries)
+- ✓ User-friendly borrower selection
+- ✓ Validation error messages
+- ✓ Authorization checks (can only view/cancel own reservations)
+- ✓ Success/error feedback via TempData
+- ✓ Bootstrap styling with badges and responsive layout
+- ✓ Anti-forgery tokens on forms
 
 **Pending:**
-- Stage 3 final commit
-- Stages 4-8 implementation
+- Stage 4 final commit
+- Stages 5-8 implementation
 
 ### Upcoming Stages
 
-- **Stage 4:** Reservation MVC interface
 - **Stage 5:** Waitlist workflow
 - **Stage 6:** Notification system
 - **Stage 7:** Integration, security and testing
@@ -280,7 +282,7 @@ This implementation will add three interconnected features to the existing Libra
 |------|-------|---------|--------|
 | `b3b8ebe` | 1 | `docs: document reservation and notification implementation plan` | ✓ Pushed |
 | `ed49726` | 2 | `feat: add reservation models and persistence` | ✓ Pushed |
-| (pending) | 3 | `feat: implement reservation workflow and validation` | Pending |
+| `546eece` | 3 | `feat: implement reservation workflow and validation` | ✓ Pushed |
 | (pending) | 4 | `feat: add reservation management interface` | Pending |
 | (pending) | 5 | `feat: implement item waitlist and queue processing` | Pending |
 | (pending) | 6 | `feat: add reservation and waitlist notifications` | Pending |
