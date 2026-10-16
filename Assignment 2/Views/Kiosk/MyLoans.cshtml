@@ -1,0 +1,93 @@
+@model (string borrowerId, List<Assignment2.LibraryManagement.BorrowRecord>? loans)
+
+@{
+    ViewData["Title"] = "Kiosk - My Loans";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-7">
+            <h1 class="h2 mb-3">
+                <i class="bi bi-person-badge me-2 text-primary"></i> My Loans
+            </h1>
+            <p class="text-muted">Enter your Borrower ID to see the items you currently have on loan.</p>
+
+            <!-- Lookup form -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <form method="get" action="@Url.Action("MyLoans", "Kiosk")" class="row g-2">
+                        <div class="col-12 col-md-8">
+                            <label for="borrowerId" class="form-label fw-bold">Your Borrower ID</label>
+                            <input type="text" class="form-control form-control-lg" id="borrowerId"
+                                   name="borrowerId" placeholder="e.g. BR001" value="@Model.borrowerId"
+                                   autocomplete="off" required maxlength="20">
+                        </div>
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-search me-2"></i> Look Up
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i> @ViewBag.Error
+                </div>
+            }
+            else if (Model.loans != null)
+            {
+                <h5 class="mb-3">Loans for <strong>@ViewBag.BorrowerName</strong> (@Model.borrowerId)</h5>
+
+                if (Model.loans.Count == 0)
+                {
+                    <div class="alert alert-info" role="status">
+                        <i class="bi bi-info-circle me-2"></i> You have no items on loan right now.
+                    </div>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var record in Model.loans)
+                        {
+                            var item = Assignment2.LibraryManagement.SearchService.FindByLibraryCode(record.LibraryCode);
+                            bool overdue = record.IsOverdue();
+                            <div class="list-group-item @(overdue ? "list-group-item-danger" : "")">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">@(item?.Name ?? record.LibraryCode)</h6>
+                                        <small class="text-muted">
+                                            Code <code>@record.LibraryCode</code> &middot;
+                                            Borrowed @record.BorrowDate.ToString("yyyy-MM-dd") &middot;
+                                            @record.GetDaysBorrowed() day(s) out
+                                        </small>
+                                    </div>
+                                    @if (overdue)
+                                    {
+                                        <span class="badge bg-danger">Overdue</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">On time</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <p class="text-muted mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        To return an item, use the <a href="@Url.Action("Return", "Kiosk")">Return</a> page.
+                    </p>
+                }
+            }
+
+            <div class="mt-4">
+                <a href="@Url.Action("Index", "Kiosk")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i> Kiosk Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

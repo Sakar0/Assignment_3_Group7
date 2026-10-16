@@ -183,6 +183,13 @@ namespace Assignment2
                 "Puzzle",
                 "3-7"
             );
+
+            // Sample borrowers so the self-service kiosk checkout workflow can
+            // be exercised in web mode (mirrors the console sample data).
+            var receptionService = new Assignment2.LibraryManagement.ReceptionService();
+            receptionService.CreateBorrower("BR001", "John Smith", "555-0101", "john.smith@email.com");
+            receptionService.CreateBorrower("BR002", "Mary Johnson", "555-0102", "mary.johnson@email.com");
+            receptionService.CreateBorrower("BR003", "Robert Brown", "555-0103", "robert.brown@email.com");
         }
 
         /// <summary>
