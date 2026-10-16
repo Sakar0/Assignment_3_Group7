@@ -196,6 +196,27 @@ namespace Assignment2.LibraryManagement
 
             Reservation.AllReservations.Add(reservation);
 
+            // Create notification for the borrower
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == itemLibraryCode);
+                string itemName = item?.Name ?? itemLibraryCode;
+                string message = $"Your reservation for '{itemName}' has been created and is pending. You will be notified when it's ready for pickup.";
+
+                NotificationService.CreateNotification(
+                    borrowerId,
+                    message,
+                    "ReservationCreated",
+                    itemLibraryCode,
+                    reservationId
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the reservation if notification creation fails
+                Console.WriteLine($"Warning: Failed to create reservation notification: {ex.Message}");
+            }
+
             return reservation;
         }
 
@@ -250,6 +271,28 @@ namespace Assignment2.LibraryManagement
                 throw new ArgumentException($"Cannot fulfill reservation with status '{reservation.Status}'.");
 
             reservation.Status = "Fulfilled";
+
+            // Create notification for the borrower
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == reservation.ItemLibraryCode);
+                string itemName = item?.Name ?? reservation.ItemLibraryCode;
+                string message = $"Your reservation for '{itemName}' is now ready! Please visit the circulation desk within 7 days to pick it up.";
+
+                NotificationService.CreateNotification(
+                    reservation.BorrowerId,
+                    message,
+                    "ReservationFulfilled",
+                    reservation.ItemLibraryCode,
+                    reservationId
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the fulfillment if notification creation fails
+                Console.WriteLine($"Warning: Failed to create fulfillment notification: {ex.Message}");
+            }
         }
     }
 }
+

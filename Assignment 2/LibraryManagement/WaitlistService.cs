@@ -220,6 +220,28 @@ namespace Assignment2.LibraryManagement
             // Make an offer to the next person
             nextEntry.Status = "OfferMade";
             nextEntry.OfferExpiryDate = DateTime.Now.AddDays(OFFER_EXPIRATION_DAYS);
+
+            // Create notification for the borrower
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == itemLibraryCode);
+                string itemName = item?.Name ?? itemLibraryCode;
+                string message = $"An item you're waiting for is now available! '{itemName}' has been offered to you. You have 7 days to accept or decline this offer.";
+
+                NotificationService.CreateNotification(
+                    nextEntry.BorrowerId,
+                    message,
+                    "OfferMade",
+                    itemLibraryCode,
+                    null,
+                    nextEntry.WaitlistEntryId
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the queue processing if notification creation fails
+                Console.WriteLine($"Warning: Failed to create offer notification: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -284,6 +306,27 @@ namespace Assignment2.LibraryManagement
             entry.Status = "Declined";
             WaitlistEntry.AllWaitlistEntries.Remove(entry);
 
+            // Create notification for the declining borrower
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == itemCode);
+                string itemName = item?.Name ?? itemCode;
+                string message = $"You declined the offer for '{itemName}'. The item has been offered to the next person in the queue.";
+
+                NotificationService.CreateNotification(
+                    borrowerId,
+                    message,
+                    "OfferDeclined",
+                    itemCode,
+                    null,
+                    waitlistEntryId
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Failed to create decline notification: {ex.Message}");
+            }
+
             // Recalculate positions
             RecalculateQueuePositions(itemCode);
 
@@ -320,6 +363,27 @@ namespace Assignment2.LibraryManagement
             // Remove from queue
             entry.Status = "Cancelled";
             WaitlistEntry.AllWaitlistEntries.Remove(entry);
+
+            // Create notification for the cancelling borrower
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == itemCode);
+                string itemName = item?.Name ?? itemCode;
+                string message = $"You cancelled your place in the queue for '{itemName}'.";
+
+                NotificationService.CreateNotification(
+                    borrowerId,
+                    message,
+                    "WaitlistCancelled",
+                    itemCode,
+                    null,
+                    waitlistEntryId
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Failed to create cancellation notification: {ex.Message}");
+            }
 
             // Recalculate positions
             RecalculateQueuePositions(itemCode);
