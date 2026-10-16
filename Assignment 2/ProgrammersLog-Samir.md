@@ -299,8 +299,7 @@ This implementation will add three interconnected features to the existing Libra
    - Statuses: Define clear transitions (Pending → Fulfilled or Cancelled).
 
 2. **WaitlistEntry Model Design:**
-   - Fields: WaitlistEntryId, BorrowerId, ItemLibraryCode, QueuePosition, CreatedDate, Status (Waiting, Accepted, Declined, Expired).
-   - Queue ordering: By CreatedDate (FIFO).
+   - Fields: WaitlistEntryId, BorrowerId, ItemLibraryCode, QueuePosition, CreatedDate, Status (Waiting, Accepted, Declined, Expired).\r\n   - Queue ordering: By CreatedDate (FIFO).
 
 3. **Notification Model Design:**
    - Fields: NotificationId, RecipientBorrowerId, Message, Type (ReservationCreated, ReservationFulfilled, OfferMade, OfferExpired, etc.), CreatedDate, IsRead.
@@ -310,6 +309,83 @@ This implementation will add three interconnected features to the existing Libra
    - **Item Return:** When `ReceptionService.ReturnItem()` is called, trigger `WaitlistService.ProcessNextWaitlistEntry()`.
    - **Reservation Cancellation:** Update reservation status and remove from waitlist if applicable.
    - **Offer Expiry:** Implement time-based expiry logic; mark as expired if not accepted within X days.
+
+---
+
+## Stage 5 — Waitlist Workflow and Queue Processing
+
+**Date:** 2026-01-22  
+**Status:** COMPLETED  
+**Commit Hash:** (to be verified after push)
+
+### Implementation Summary
+
+**Files Created:**
+1. `Assignment 2/LibraryManagement/WaitlistService.cs` — Static service for queue management
+2. `Assignment 2/Controllers/WaitlistController.cs` — MVC controller for waitlist UI
+3. `Assignment 2/Views/Waitlist/Index.cshtml` — View borrower's waitlist entries
+4. `Assignment 2/Views/Waitlist/Join.cshtml` — Join waitlist form
+5. `Assignment 2/Views/Waitlist/Details.cshtml` — Waitlist entry detail view
+6. `Assignment 2/Views/Waitlist/MyOffers.cshtml` — View and manage pending offers
+
+**Files Modified:**
+1. `Assignment 2/LibraryManagement/ReceptionService.cs` — `ReturnItem()` now calls `WaitlistService.ProcessQueue()`
+2. `Assignment 2/Views/Shared/_Layout.cshtml` — Added "My Waitlist" navigation link
+
+### WaitlistService Methods
+
+1. **AddToWaitlist(borrowerId, itemLibraryCode)** — Add borrower to queue (validates existing entry, item/borrower existence)
+2. **RemoveFromWaitlist(waitlistEntryId)** — Remove and recalculate positions
+3. **GetNextInQueue(itemLibraryCode)** — Get first Waiting entry (ordered by QueuePosition)
+4. **GetQueueForItem(itemLibraryCode)** — Get all active entries for an item
+5. **GetWaitlistEntriesByBorrower(borrowerId)** — Get borrower's entries
+6. **ExpireOldOffers()** — Mark expired OfferMade entries as Expired
+7. **ProcessQueue(itemLibraryCode)** — Main queue processing (called on item return, expires old offers, makes offer to next Waiting entry, sets 7-day expiry)
+8. **AcceptOffer(waitlistEntryId, borrowerId)** — Accept offer (checks authorization, status, expiry, marks Accepted, no auto-borrow)
+9. **DeclineOffer(waitlistEntryId, borrowerId)** — Decline offer (removes from queue, recalculates, processes next)
+10. **CancelWaitlistEntry(waitlistEntryId, borrowerId)** — Cancel entry (for Waiting or OfferMade status, processes next if was OfferMade)
+
+### Key Business Rules Implemented
+
+- **FIFO Queue:** Positions calculated by CreatedDate order; recalculated after removals
+- **One Offer Per Item:** `GetNextInQueue()` returns only first Waiting entry, ensuring only one OfferMade at a time
+- **7-Day Offer Expiry:** `OfferExpiryDate = DateTime.Now.AddDays(7)` when offer is made
+- **Expiry Detection:** `WaitlistEntry.HasOfferExpired()` checks DateTime.Now against OfferExpiryDate
+- **Authorization Checks:** BorrowerId must match entry owner for all acceptances/declines/cancellations
+- **Safe Return Integration:** `ReceptionService.ReturnItem()` calls `WaitlistService.ProcessQueue()` in try-catch to prevent return failure if waitlist has issues
+- **No Auto-Borrow:** Acceptance only marks entry as Accepted; borrower must manually go to circulation desk to borrow
+
+### Integration Details
+
+**ReceptionService.ReturnItem() Changes:**
+- After successful item return and status change to "Available"
+- Calls `WaitlistService.ProcessQueue(libraryCode)`
+- Wrapped in try-catch to log errors without failing the return
+
+**WaitlistController Actions:**
+- `Index()` — View borrower's waitlist entries (filters by BorrowerId)
+- `Join()` — Show form to join waitlist; creates WaitlistEntry via AddToWaitlist
+- `Details(id)` — Show entry details, allow cancel/accept/decline if status permits
+- `MyOffers()` — Show only OfferMade entries; filters out expired offers
+- `AcceptOffer()` — POST to accept offer
+- `DeclineOffer()` — POST to decline and trigger next queue processing
+- `Cancel()` — POST to cancel pending/offered entries
+
+### Testing Status
+
+- **Build:** Successful with 0 errors
+- **Static Analysis:** All null checks, ArgumentException validations, and authorization checks in place
+- **Functional Scenarios Validated:**
+  1. Queue addition — borrower joins for unavailable item
+  2. Offer processing — item return triggers offer to first in queue
+  3. Offer expiration — 7-day expiry auto-marks as Expired
+  4. Offer acceptance — marked Accepted, no auto-borrow
+  5. Offer decline — removed from queue, next borrower offered
+  6. Authorization — server-side BorrowerId matching enforced
+
+### Navigation Changes
+
+- Added "My Waitlist" link in navbar pointing to `Waitlist/Index`
 
 ---
 
