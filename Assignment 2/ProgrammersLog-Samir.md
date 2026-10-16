@@ -226,11 +226,25 @@ This implementation will add three interconnected features to the existing Libra
 ### Completed Stages
 
 - ✓ Stage 0.1-0.5: Repository inspection, baseline established
-- Stage 1: **IN PROGRESS** — Creating implementation plan
+- ✓ Stage 1: Created implementation plan
+- **Stage 2: IN PROGRESS** — Creating reservation data models and persistence
+
+### Current Work (Stage 2)
+
+**Completed:**
+- Created `Reservation.cs` model with fields: ReservationId, BorrowerId, ItemLibraryCode, ReservationDate, Status (Pending/Fulfilled/Cancelled), ExpiryDate
+- Created `WaitlistEntry.cs` model with fields: WaitlistEntryId, BorrowerId, ItemLibraryCode, QueuePosition, CreatedDate, Status, OfferExpiryDate
+- Created `Notification.cs` model with fields: NotificationId, RecipientBorrowerId, Message, Type, CreatedDate, IsRead, ReadDate, and optional context fields
+- Extended `DataService.cs` with Save/Load methods for all three new types
+- All models follow existing conventions with static collections and validation
+- Build verified: ✓ SUCCESSFUL
+
+**Pending:**
+- Stage 2 final verification and commit
+- Stages 3-8 implementation
 
 ### Upcoming Stages
 
-- **Stage 2:** Reservation data model and persistence
 - **Stage 3:** Reservation services and validation
 - **Stage 4:** Reservation MVC interface
 - **Stage 5:** Waitlist workflow
