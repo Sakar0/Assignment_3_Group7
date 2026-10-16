@@ -1,4 +1,4 @@
-# Programmer's Log - Library Management System (Assignment 2)
+# Programmer's Log - Library Management System (Assignment 3)
 
 **Date:** 2026
 **Project:** Library Management System  
