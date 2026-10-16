@@ -21,6 +21,9 @@ namespace Assignment2.LibraryManagement
         private static readonly string BorrowRecordsFilePath = Path.Combine(DataDirectory, "borrow_records.json");
         private static readonly string BranchesFilePath = Path.Combine(DataDirectory, "branches.json");
         private static readonly string TransfersFilePath = Path.Combine(DataDirectory, "transfers.json");
+        private static readonly string ReservationsFilePath = Path.Combine(DataDirectory, "reservations.json");
+        private static readonly string WaitlistEntriesFilePath = Path.Combine(DataDirectory, "waitlist_entries.json");
+        private static readonly string NotificationsFilePath = Path.Combine(DataDirectory, "notifications.json");
 
         // JSON serializer options with custom converters
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
@@ -66,6 +69,18 @@ namespace Assignment2.LibraryManagement
                 SaveTransfers();
                 Console.WriteLine($"✓ Transfers saved to {TransfersFilePath}");
 
+                // Save reservations
+                SaveReservations();
+                Console.WriteLine($"✓ Reservations saved to {ReservationsFilePath}");
+
+                // Save waitlist entries
+                SaveWaitlistEntries();
+                Console.WriteLine($"✓ Waitlist entries saved to {WaitlistEntriesFilePath}");
+
+                // Save notifications
+                SaveNotifications();
+                Console.WriteLine($"✓ Notifications saved to {NotificationsFilePath}");
+
                 Console.WriteLine("\n✓ All data saved successfully!");
                 return true;
             }
@@ -86,7 +101,12 @@ namespace Assignment2.LibraryManagement
             // If no data files exist, return silently (first run)
             if (!File.Exists(ItemsFilePath) && 
                 !File.Exists(BorrowersFilePath) && 
-                !File.Exists(BorrowRecordsFilePath))
+                !File.Exists(BorrowRecordsFilePath) &&
+                !File.Exists(BranchesFilePath) &&
+                !File.Exists(TransfersFilePath) &&
+                !File.Exists(ReservationsFilePath) &&
+                !File.Exists(WaitlistEntriesFilePath) &&
+                !File.Exists(NotificationsFilePath))
             {
                 return false; // No data to load
             }
@@ -128,6 +148,27 @@ namespace Assignment2.LibraryManagement
                     Console.WriteLine($"✓ Transfers loaded from {TransfersFilePath}");
                 }
 
+                // Load reservations
+                if (File.Exists(ReservationsFilePath))
+                {
+                    LoadReservations();
+                    Console.WriteLine($"✓ Reservations loaded from {ReservationsFilePath}");
+                }
+
+                // Load waitlist entries
+                if (File.Exists(WaitlistEntriesFilePath))
+                {
+                    LoadWaitlistEntries();
+                    Console.WriteLine($"✓ Waitlist entries loaded from {WaitlistEntriesFilePath}");
+                }
+
+                // Load notifications
+                if (File.Exists(NotificationsFilePath))
+                {
+                    LoadNotifications();
+                    Console.WriteLine($"✓ Notifications loaded from {NotificationsFilePath}");
+                }
+
                 Console.WriteLine("\n✓ All data loaded successfully!");
                 return true;
             }
@@ -147,6 +188,9 @@ namespace Assignment2.LibraryManagement
             Console.WriteLine($"📚 Items in memory: {Item.AllItems.Count}");
             Console.WriteLine($"👤 Borrowers in memory: {Borrower.AllBorrowers.Count}");
             Console.WriteLine($"📋 Borrow records in memory: {BorrowRecord.AllBorrowRecords.Count}");
+            Console.WriteLine($"📌 Reservations in memory: {Reservation.AllReservations.Count}");
+            Console.WriteLine($"⏳ Waitlist entries in memory: {WaitlistEntry.AllWaitlistEntries.Count}");
+            Console.WriteLine($"🔔 Notifications in memory: {Notification.AllNotifications.Count}");
 
             if (File.Exists(ItemsFilePath))
             {
@@ -178,6 +222,36 @@ namespace Assignment2.LibraryManagement
                 catch { }
             }
 
+            if (File.Exists(ReservationsFilePath))
+            {
+                try
+                {
+                    int savedReservations = CountReservationsInFile(ReservationsFilePath);
+                    Console.WriteLine($"💾 Reservations in saved file: {savedReservations}");
+                }
+                catch { }
+            }
+
+            if (File.Exists(WaitlistEntriesFilePath))
+            {
+                try
+                {
+                    int savedWaitlistEntries = CountWaitlistEntriesInFile(WaitlistEntriesFilePath);
+                    Console.WriteLine($"💾 Waitlist entries in saved file: {savedWaitlistEntries}");
+                }
+                catch { }
+            }
+
+            if (File.Exists(NotificationsFilePath))
+            {
+                try
+                {
+                    int savedNotifications = CountNotificationsInFile(NotificationsFilePath);
+                    Console.WriteLine($"💾 Notifications in saved file: {savedNotifications}");
+                }
+                catch { }
+            }
+
             Console.WriteLine();
         }
 
@@ -189,6 +263,9 @@ namespace Assignment2.LibraryManagement
             Item.AllItems.Clear();
             Borrower.AllBorrowers.Clear();
             BorrowRecord.AllBorrowRecords.Clear();
+            Reservation.AllReservations.Clear();
+            WaitlistEntry.AllWaitlistEntries.Clear();
+            Notification.AllNotifications.Clear();
             Console.WriteLine("✓ All data cleared from memory");
         }
 
@@ -199,7 +276,10 @@ namespace Assignment2.LibraryManagement
         {
             return File.Exists(ItemsFilePath) || 
                    File.Exists(BorrowersFilePath) || 
-                   File.Exists(BorrowRecordsFilePath);
+                   File.Exists(BorrowRecordsFilePath) ||
+                   File.Exists(ReservationsFilePath) ||
+                   File.Exists(WaitlistEntriesFilePath) ||
+                   File.Exists(NotificationsFilePath);
         }
 
         // ===== Private Helper Methods =====
@@ -320,6 +400,120 @@ namespace Assignment2.LibraryManagement
         }
 
         /// <summary>
+        /// Save reservations collection to JSON file
+        /// </summary>
+        private static void SaveReservations()
+        {
+            string json = JsonSerializer.Serialize(Reservation.AllReservations, JsonOptions);
+            File.WriteAllText(ReservationsFilePath, json);
+        }
+
+        /// <summary>
+        /// Load reservations collection from JSON file
+        /// </summary>
+        private static void LoadReservations()
+        {
+            Reservation.AllReservations.Clear();
+            string json = File.ReadAllText(ReservationsFilePath);
+            var reservations = JsonSerializer.Deserialize<List<Reservation>>(json, JsonOptions);
+
+            if (reservations != null)
+            {
+                foreach (var reservation in reservations)
+                {
+                    Reservation.AllReservations.Add(reservation);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Count reservations in saved JSON file (for statistics)
+        /// </summary>
+        private static int CountReservationsInFile(string filePath)
+        {
+            if (!File.Exists(filePath)) return 0;
+            string json = File.ReadAllText(filePath);
+            var reservations = JsonSerializer.Deserialize<List<Reservation>>(json, JsonOptions);
+            return reservations?.Count ?? 0;
+        }
+
+        /// <summary>
+        /// Save waitlist entries collection to JSON file
+        /// </summary>
+        private static void SaveWaitlistEntries()
+        {
+            string json = JsonSerializer.Serialize(WaitlistEntry.AllWaitlistEntries, JsonOptions);
+            File.WriteAllText(WaitlistEntriesFilePath, json);
+        }
+
+        /// <summary>
+        /// Load waitlist entries collection from JSON file
+        /// </summary>
+        private static void LoadWaitlistEntries()
+        {
+            WaitlistEntry.AllWaitlistEntries.Clear();
+            string json = File.ReadAllText(WaitlistEntriesFilePath);
+            var waitlistEntries = JsonSerializer.Deserialize<List<WaitlistEntry>>(json, JsonOptions);
+
+            if (waitlistEntries != null)
+            {
+                foreach (var entry in waitlistEntries)
+                {
+                    WaitlistEntry.AllWaitlistEntries.Add(entry);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Count waitlist entries in saved JSON file (for statistics)
+        /// </summary>
+        private static int CountWaitlistEntriesInFile(string filePath)
+        {
+            if (!File.Exists(filePath)) return 0;
+            string json = File.ReadAllText(filePath);
+            var entries = JsonSerializer.Deserialize<List<WaitlistEntry>>(json, JsonOptions);
+            return entries?.Count ?? 0;
+        }
+
+        /// <summary>
+        /// Save notifications collection to JSON file
+        /// </summary>
+        private static void SaveNotifications()
+        {
+            string json = JsonSerializer.Serialize(Notification.AllNotifications, JsonOptions);
+            File.WriteAllText(NotificationsFilePath, json);
+        }
+
+        /// <summary>
+        /// Load notifications collection from JSON file
+        /// </summary>
+        private static void LoadNotifications()
+        {
+            Notification.AllNotifications.Clear();
+            string json = File.ReadAllText(NotificationsFilePath);
+            var notifications = JsonSerializer.Deserialize<List<Notification>>(json, JsonOptions);
+
+            if (notifications != null)
+            {
+                foreach (var notification in notifications)
+                {
+                    Notification.AllNotifications.Add(notification);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Count notifications in saved JSON file (for statistics)
+        /// </summary>
+        private static int CountNotificationsInFile(string filePath)
+        {
+            if (!File.Exists(filePath)) return 0;
+            string json = File.ReadAllText(filePath);
+            var notifications = JsonSerializer.Deserialize<List<Notification>>(json, JsonOptions);
+            return notifications?.Count ?? 0;
+        }
+
+        /// <summary>
         /// Delete all saved data files (for factory reset)
         /// </summary>
         public static bool DeleteSavedData()
@@ -329,6 +523,9 @@ namespace Assignment2.LibraryManagement
                 if (File.Exists(ItemsFilePath)) File.Delete(ItemsFilePath);
                 if (File.Exists(BorrowersFilePath)) File.Delete(BorrowersFilePath);
                 if (File.Exists(BorrowRecordsFilePath)) File.Delete(BorrowRecordsFilePath);
+                if (File.Exists(ReservationsFilePath)) File.Delete(ReservationsFilePath);
+                if (File.Exists(WaitlistEntriesFilePath)) File.Delete(WaitlistEntriesFilePath);
+                if (File.Exists(NotificationsFilePath)) File.Delete(NotificationsFilePath);
 
                 if (Directory.Exists(DataDirectory) && Directory.GetFiles(DataDirectory).Length == 0)
                 {

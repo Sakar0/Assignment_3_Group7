@@ -1,0 +1,149 @@
+@model List<Assignment2.LibraryManagement.WaitlistEntry>
+@{
+    ViewData["Title"] = "My Waitlist";
+}
+
+<h1>My Waitlist Entries</h1>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" action="@Url.Action("Index")" class="form-inline">
+            <div class="form-group me-2">
+                <label for="borrowerId" class="form-label">Select Borrower:</label>
+                <select name="borrowerId" id="borrowerId" class="form-select ms-2">
+                    <option value="">-- Choose a Borrower --</option>
+                    @foreach (var borrower in (ViewBag.Borrowers as List<Assignment2.LibraryManagement.Borrower>))
+                    {
+                        var isSelected = ViewBag.SelectedBorrowerId == borrower.BorrowerId;
+                        <option value="@borrower.BorrowerId" selected="@isSelected">@borrower.Name (@borrower.BorrowerId)</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">View</button>
+        </form>
+    </div>
+</div>
+
+@if (ViewBag.SelectedBorrowerId != null)
+{
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="mb-3">
+        <a href="@Url.Action("Join")" class="btn btn-success">Join Waitlist</a>
+        <a href="@Url.Action("MyOffers")" class="btn btn-info">View My Offers</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <p class="text-muted">No waitlist entries. <a href="@Url.Action("Join")">Join a waitlist</a></p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Queue Position</th>
+                    <th>Status</th>
+                    <th>Date Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model)
+                {
+                    var item = Assignment2.LibraryManagement.Item.AllItems
+                        .FirstOrDefault(i => i.LibraryCode == entry.ItemLibraryCode);
+
+                    <tr>
+                        <td>
+                            @if (item != null)
+                            {
+                                <strong>@item.Name</strong><br />
+                                <small class="text-muted">(@item.LibraryCode)</small>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Item not found (@entry.ItemLibraryCode)</span>
+                            }
+                        </td>
+                        <td>
+                            @if (entry.Status == "Waiting")
+                            {
+                                <span class="badge bg-warning">#@entry.QueuePosition</span>
+                            }
+                            else if (entry.Status == "OfferMade")
+                            {
+                                <span class="badge bg-info">Offered</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>
+                            @switch (entry.Status)
+                            {
+                                case "Waiting":
+                                    <span class="badge bg-primary">Waiting</span>
+                                    break;
+                                case "OfferMade":
+                                    <span class="badge bg-info">Offer Made</span>
+                                    break;
+                                case "Accepted":
+                                    <span class="badge bg-success">Accepted</span>
+                                    break;
+                                case "Declined":
+                                    <span class="badge bg-danger">Declined</span>
+                                    break;
+                                case "Expired":
+                                    <span class="badge bg-secondary">Expired</span>
+                                    break;
+                                case "Cancelled":
+                                    <span class="badge bg-dark">Cancelled</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-light text-dark">@entry.Status</span>
+                                    break;
+                            }
+                        </td>
+                        <td>@entry.CreatedDate.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <a href="@Url.Action("Details", new { id = entry.WaitlistEntryId })" class="btn btn-sm btn-info">Details</a>
+
+                            @if (entry.Status == "Waiting" || entry.Status == "OfferMade")
+                            {
+                                <form method="post" action="@Url.Action("Cancel")" style="display:inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="waitlistEntryId" value="@entry.WaitlistEntryId" />
+                                    <input type="hidden" name="borrowerId" value="@ViewBag.SelectedBorrowerId" />
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this waitlist entry?');">
+                                        Cancel
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p class="text-muted">Please select a borrower to view their waitlist entries.</p>
+}

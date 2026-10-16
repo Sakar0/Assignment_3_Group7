@@ -1,0 +1,148 @@
+@model List<Assignment2.LibraryManagement.WaitlistEntry>
+@{
+    ViewData["Title"] = "My Waitlist Offers";
+}
+
+<h1>My Waitlist Offers</h1>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" action="@Url.Action("MyOffers")" class="form-inline">
+            <div class="form-group me-2">
+                <label for="borrowerId" class="form-label">Select Borrower:</label>
+                <select name="borrowerId" id="borrowerId" class="form-select ms-2">
+                    <option value="">-- Choose a Borrower --</option>
+                    @foreach (var borrower in (ViewBag.Borrowers as List<Assignment2.LibraryManagement.Borrower>))
+                    {
+                        var isSelected = ViewBag.SelectedBorrowerId == borrower.BorrowerId;
+                        <option value="@borrower.BorrowerId" selected="@isSelected">@borrower.Name (@borrower.BorrowerId)</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">View</button>
+        </form>
+    </div>
+</div>
+
+@if (ViewBag.SelectedBorrowerId != null)
+{
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="mb-3">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Back to My Waitlist</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <p class="text-muted">No pending offers at this time. <a href="@Url.Action("Index")">View my waitlist entries</a></p>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            <strong>You have @Model.Count pending offer(s)!</strong>
+            Please respond to each offer within the expiration time to reserve the item.
+        </div>
+
+        @foreach (var entry in Model)
+        {
+            var item = Assignment2.LibraryManagement.Item.AllItems
+                .FirstOrDefault(i => i.LibraryCode == entry.ItemLibraryCode);
+            var isExpired = entry.HasOfferExpired();
+
+            <div class="card mb-3 @(isExpired ? "border-danger" : "border-success")">
+                <div class="card-header @(isExpired ? "bg-danger" : "bg-success") text-white">
+                    <h5 class="card-title mb-0">
+                        @if (item != null)
+                        {
+                            @item.Name
+                        }
+                        else
+                        {
+                            <span class="text-danger">Item not found (@entry.ItemLibraryCode)</span>
+                        }
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Item Code:</dt>
+                        <dd class="col-sm-9">@entry.ItemLibraryCode</dd>
+
+                        <dt class="col-sm-3">Offer Status:</dt>
+                        <dd class="col-sm-9">
+                            @if (isExpired)
+                            {
+                                <span class="badge bg-danger">EXPIRED</span>
+                                <p class="text-danger mt-2"><strong>This offer has expired. It will be removed from your offers soon.</strong></p>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Offer Expires:</dt>
+                        <dd class="col-sm-9">
+                            <span class="@(isExpired ? "text-danger" : "text-success")">
+                                @entry.OfferExpiryDate?.ToString("MMMM dd, yyyy HH:mm (dddd)")
+                            </span>
+                        </dd>
+
+                        @if (item != null)
+                        {
+                            <dt class="col-sm-3">Item Details:</dt>
+                            <dd class="col-sm-9">
+                                <small>Type: @item.GetType().Name</small><br />
+                                <small class="text-muted">Code: @item.LibraryCode</small>
+                            </dd>
+                        }
+                    </dl>
+
+                    @if (!isExpired)
+                    {
+                        <hr />
+                        <p class="mb-2"><strong>What would you like to do?</strong></p>
+
+                        <div class="button-group">
+                            <form method="post" action="@Url.Action("AcceptOffer")" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="waitlistEntryId" value="@entry.WaitlistEntryId" />
+                                <input type="hidden" name="borrowerId" value="@ViewBag.SelectedBorrowerId" />
+                                <button type="submit" class="btn btn-success">
+                                    ✓ Accept Offer
+                                </button>
+                            </form>
+
+                            <form method="post" action="@Url.Action("DeclineOffer")" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="waitlistEntryId" value="@entry.WaitlistEntryId" />
+                                <input type="hidden" name="borrowerId" value="@ViewBag.SelectedBorrowerId" />
+                                <button type="submit" class="btn btn-warning" onclick="return confirm('Decline this offer? The next person in line will be offered the item.');">
+                                    ✗ Decline Offer
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+}
+else
+{
+    <p class="text-muted">Please select a borrower to view their offers.</p>
+}

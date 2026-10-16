@@ -1,0 +1,150 @@
+@model Assignment2.LibraryManagement.WaitlistEntry
+@{
+    ViewData["Title"] = "Waitlist Entry Details";
+}
+
+<h1>Waitlist Entry Details</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <dl class="row">
+            <dt class="col-sm-3">Entry ID:</dt>
+            <dd class="col-sm-9">@Model.WaitlistEntryId</dd>
+
+            <dt class="col-sm-3">Borrower:</dt>
+            <dd class="col-sm-9">
+                @{
+                    var borrower = Assignment2.LibraryManagement.Borrower.AllBorrowers
+                        .FirstOrDefault(b => b.BorrowerId == Model.BorrowerId);
+                }
+                @if (borrower != null)
+                {
+                    <text>@borrower.Name (@borrower.BorrowerId)</text>
+                }
+                else
+                {
+                    <span class="text-danger">Borrower not found (@Model.BorrowerId)</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Item:</dt>
+            <dd class="col-sm-9">
+                @{
+                    var item = Assignment2.LibraryManagement.Item.AllItems
+                        .FirstOrDefault(i => i.LibraryCode == Model.ItemLibraryCode);
+                }
+                @if (item != null)
+                {
+                    <strong>@item.Name</strong><br />
+                    <small class="text-muted">(@item.LibraryCode) - Current Status: @item.Status</small>
+                }
+                else
+                {
+                    <span class="text-danger">Item not found (@Model.ItemLibraryCode)</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Status:</dt>
+            <dd class="col-sm-9">
+                @switch (Model.Status)
+                {
+                    case "Waiting":
+                        <span class="badge bg-primary">Waiting</span>
+                        break;
+                    case "OfferMade":
+                        <span class="badge bg-info">Offer Made</span>
+                        break;
+                    case "Accepted":
+                        <span class="badge bg-success">Accepted</span>
+                        break;
+                    case "Declined":
+                        <span class="badge bg-danger">Declined</span>
+                        break;
+                    case "Expired":
+                        <span class="badge bg-secondary">Expired</span>
+                        break;
+                    case "Cancelled":
+                        <span class="badge bg-dark">Cancelled</span>
+                        break;
+                    default:
+                        <span class="badge bg-light text-dark">@Model.Status</span>
+                        break;
+                }
+            </dd>
+
+            <dt class="col-sm-3">Queue Position:</dt>
+            <dd class="col-sm-9">
+                @if (Model.Status == "Waiting")
+                {
+                    <strong>#@Model.QueuePosition</strong>
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Joined Date:</dt>
+            <dd class="col-sm-9">@Model.CreatedDate.ToString("MMMM dd, yyyy HH:mm")</dd>
+
+            @if (Model.Status == "OfferMade" && Model.OfferExpiryDate.HasValue)
+            {
+                <dt class="col-sm-3">Offer Expires:</dt>
+                <dd class="col-sm-9">
+                    @{
+                        var isExpired = Model.HasOfferExpired();
+                        <span class="@(isExpired ? "text-danger" : "text-success")">
+                            @Model.OfferExpiryDate.Value.ToString("MMMM dd, yyyy HH:mm")
+                            @if (isExpired)
+                            {
+                                <strong>(EXPIRED)</strong>
+                            }
+                        </span>
+                    }
+                </dd>
+            }
+        </dl>
+
+        @if (Model.Status == "Waiting" || Model.Status == "OfferMade")
+        {
+            <hr />
+            <h3>Actions</h3>
+
+            @if (Model.Status == "Waiting")
+            {
+                <form method="post" action="@Url.Action("Cancel")" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="waitlistEntryId" value="@Model.WaitlistEntryId" />
+                    <input type="hidden" name="borrowerId" value="@Model.BorrowerId" />
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this waitlist entry?');">
+                        Cancel Waitlist Entry
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status == "OfferMade" && !Model.HasOfferExpired())
+            {
+                <form method="post" action="@Url.Action("AcceptOffer")" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="waitlistEntryId" value="@Model.WaitlistEntryId" />
+                    <input type="hidden" name="borrowerId" value="@Model.BorrowerId" />
+                    <button type="submit" class="btn btn-success">
+                        Accept Offer
+                    </button>
+                </form>
+
+                <form method="post" action="@Url.Action("DeclineOffer")" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="waitlistEntryId" value="@Model.WaitlistEntryId" />
+                    <input type="hidden" name="borrowerId" value="@Model.BorrowerId" />
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to decline this offer? The next person in line will be offered the item.');">
+                        Decline Offer
+                    </button>
+                </form>
+            }
+        }
+
+        <hr />
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Back to My Waitlist</a>
+    </div>
+</div>

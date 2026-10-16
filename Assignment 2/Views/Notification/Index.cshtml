@@ -1,0 +1,191 @@
+@model List<Assignment2.LibraryManagement.Notification>
+@{
+    ViewData["Title"] = "My Notifications";
+}
+
+<div class="container mt-4">
+    <h1>@ViewData["Title"]</h1>
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ViewBag.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Borrower Selection Section -->
+    @if (string.IsNullOrEmpty(ViewBag.BorrowerId))
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Select a Borrower</h5>
+                <p class="text-muted">Choose a borrower to view their notifications:</p>
+                <div class="list-group">
+                    @foreach (var borrower in ViewBag.Borrowers)
+                    {
+                        <a href="@Url.Action("Index", new { borrowerId = borrower.BorrowerId })"
+                           class="list-group-item list-group-item-action">
+                            <strong>@borrower.Name</strong> (@borrower.BorrowerId)
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Notifications Section -->
+    @if (!string.IsNullOrEmpty(ViewBag.BorrowerId))
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">Notifications for <strong>@ViewBag.BorrowerName</strong></h5>
+                    </div>
+                    <div class="col-auto">
+                        <a href="@Url.Action("Index", "Reservation", new { borrowerId = ViewBag.BorrowerId })"
+                           class="btn btn-sm btn-outline-primary">Back to Reservations</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <p class="text-muted text-center py-4">
+                        <i class="bi bi-info-circle"></i>
+                        No notifications yet. You will see notifications here when reservation or waitlist events occur.
+                    </p>
+                }
+                else
+                {
+                    <div class="notification-stats mb-3 p-3 bg-light rounded">
+                        <span class="badge bg-secondary">Total: @Model.Count</span>
+                        <span class="badge bg-warning text-dark">Unread: @ViewBag.UnreadCount</span>
+                    </div>
+
+                    <div class="list-group">
+                        @foreach (var notification in Model)
+                        {
+                            <div class="list-group-item @(notification.IsRead ? "" : "list-group-item-light")">
+                                <div class="row align-items-center">
+                                    <div class="col-md-9">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    @if (!notification.IsRead)
+                                                    {
+                                                        <span class="badge bg-info">New</span>
+                                                    }
+                                                    <span class="badge bg-secondary">@notification.Type</span>
+                                                </h6>
+                                                <p class="mb-0">@notification.Message</p>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar-event"></i>
+                                            @notification.CreatedDate.ToString("g")
+                                            @if (notification.IsRead && notification.ReadDate.HasValue)
+                                            {
+                                                <span class="ms-2">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    Read on @notification.ReadDate.Value.ToString("g")
+                                                </span>
+                                            }
+                                        </small>
+
+                                        <!-- Context Details -->
+                                        @if (!string.IsNullOrEmpty(notification.ItemLibraryCode) ||
+                                             !string.IsNullOrEmpty(notification.ReservationId) ||
+                                             !string.IsNullOrEmpty(notification.WaitlistEntryId))
+                                        {
+                                            <div class="mt-2 small text-muted">
+                                                @if (!string.IsNullOrEmpty(notification.ItemLibraryCode))
+                                                {
+                                                    <span><i class="bi bi-book"></i> Item: @notification.ItemLibraryCode</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(notification.ReservationId))
+                                                {
+                                                    <span class="ms-2"><i class="bi bi-bookmark"></i> Reservation: @notification.ReservationId</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(notification.WaitlistEntryId))
+                                                {
+                                                    <span class="ms-2"><i class="bi bi-hourglass-split"></i> Waitlist: @notification.WaitlistEntryId</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <form method="post" class="d-inline-block" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="notificationId" value="@notification.NotificationId" />
+                                            <input type="hidden" name="borrowerId" value="@ViewBag.BorrowerId" />
+
+                                            @if (notification.IsRead)
+                                            {
+                                                <button type="submit" formaction="@Url.Action("MarkAsUnread")"
+                                                        class="btn btn-sm btn-outline-warning"
+                                                        title="Mark as unread">
+                                                    <i class="bi bi-envelope"></i> Unread
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" formaction="@Url.Action("MarkAsRead")"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        title="Mark as read">
+                                                    <i class="bi bi-check-circle"></i> Read
+                                                </button>
+                                            }
+
+                                            <button type="submit" formaction="@Url.Action("Delete")"
+                                                    class="btn btn-sm btn-outline-danger ms-1"
+                                                    onclick="return confirm('Delete this notification?');">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .list-group-item {
+        border-left: 4px solid #dee2e6;
+    }
+
+    .list-group-item.list-group-item-light {
+        border-left-color: #0d6efd;
+        background-color: #f8f9ff !important;
+    }
+
+    .notification-stats {
+        font-size: 0.9em;
+    }
+
+    .badge {
+        margin-right: 4px;
+    }
+</style>
