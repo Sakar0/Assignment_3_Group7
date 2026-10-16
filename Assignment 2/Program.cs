@@ -53,21 +53,30 @@ namespace Assignment2
         private static void InitializeWebAppData()
         {
             bool loaded = Assignment2.LibraryManagement.DataService.LoadAllData();
-            if (loaded && Assignment2.LibraryManagement.LibraryTransfer.AllTransfers.Count > 0)
+
+            // Check which collections are empty and need initialization
+            bool branchesEmpty = Assignment2.LibraryManagement.LibraryBranch.AllBranches.Count == 0;
+            bool itemsEmpty = Assignment2.LibraryManagement.Item.AllItems.Count == 0;
+            bool transfersEmpty = Assignment2.LibraryManagement.LibraryTransfer.AllTransfers.Count == 0;
+            bool borrowersEmpty = Assignment2.LibraryManagement.Borrower.AllBorrowers.Count == 0;
+
+            // If all collections are already populated from persisted data, return early
+            if (loaded && !branchesEmpty && !itemsEmpty && !transfersEmpty && !borrowersEmpty)
             {
                 System.Console.WriteLine("✓ Loaded existing data from files");
                 return;
             }
 
             // Initialize sample branches if none exist
-            if (Assignment2.LibraryManagement.LibraryBranch.AllBranches.Count == 0)
+            if (branchesEmpty)
             {
                 System.Console.WriteLine("Initializing sample branches...");
                 InitializeSampleBranches();
                 System.Console.WriteLine("✓ Sample branches initialized");
             }
 
-            if (Assignment2.LibraryManagement.Item.AllItems.Count == 0)
+            // Ensure sample items are initialized
+            if (itemsEmpty)
             {
                 System.Console.WriteLine("Initializing sample data for web application...");
                 InitializeSampleData();
@@ -75,13 +84,22 @@ namespace Assignment2
             }
 
             // Initialize sample transfers if none exist
-            if (Assignment2.LibraryManagement.LibraryTransfer.AllTransfers.Count == 0)
+            if (transfersEmpty)
             {
                 System.Console.WriteLine("Initializing sample transfers...");
                 InitializeSampleTransfers();
+                System.Console.WriteLine("✓ Sample transfers initialized");
             }
 
-            // Save all initialized data
+            // Ensure sample borrowers are initialized
+            if (borrowersEmpty)
+            {
+                System.Console.WriteLine("Initializing sample borrowers...");
+                InitializeSampleBorrowers();
+                System.Console.WriteLine("✓ Sample borrowers initialized");
+            }
+
+            // Save all initialized data to persist for future runs
             if (Assignment2.LibraryManagement.DataService.SaveAllData())
             {
                 System.Console.WriteLine("✓ Data persisted to disk");
@@ -249,6 +267,19 @@ namespace Assignment2
             // transfer3 remains in "Approved" status (simulating in-transit)
 
             System.Console.WriteLine("✓ Sample transfers initialized");
+        }
+
+        /// <summary>
+        /// Initialize sample borrowers for the web application
+        /// Creates three standard borrowers if none exist
+        /// </summary>
+        private static void InitializeSampleBorrowers()
+        {
+            var receptionService = new Assignment2.LibraryManagement.ReceptionService();
+
+            receptionService.CreateBorrower("BR001", "John Smith", "555-0101", "john.smith@email.com");
+            receptionService.CreateBorrower("BR002", "Mary Johnson", "555-0102", "mary.johnson@email.com");
+            receptionService.CreateBorrower("BR003", "Robert Brown", "555-0103", "robert.brown@email.com");
         }
     }
 }
