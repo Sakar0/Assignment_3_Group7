@@ -69,6 +69,7 @@ namespace Assignment2.LibraryManagement
         /// <summary>
         /// Clean up expired offers by marking them as Expired
         /// Called periodically or before queue processing
+        /// Creates OfferExpired notifications to notify borrowers
         /// </summary>
         public static void ExpireOldOffers()
         {
@@ -76,6 +77,37 @@ namespace Assignment2.LibraryManagement
             foreach (var entry in expiredOffers)
             {
                 entry.Status = "Expired";
+
+                // Create notification for expiration (only once per entry)
+                // Check if we already sent an expiration notification for this entry
+                try
+                {
+                    var existingNotification = Notification.AllNotifications
+                        .FirstOrDefault(n => n.WaitlistEntryId == entry.WaitlistEntryId &&
+                                            n.Type == "OfferExpired" &&
+                                            n.RecipientBorrowerId == entry.BorrowerId);
+
+                    if (existingNotification == null)
+                    {
+                        var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == entry.ItemLibraryCode);
+                        string itemName = item?.Name ?? entry.ItemLibraryCode;
+                        string message = $"Your offer for '{itemName}' has expired as you did not accept it within 7 days. Please rejoin the waitlist if still interested.";
+
+                        NotificationService.CreateNotification(
+                            entry.BorrowerId,
+                            message,
+                            "OfferExpired",
+                            entry.ItemLibraryCode,
+                            null,
+                            entry.WaitlistEntryId
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Failed to create offer expiry notification for {entry.WaitlistEntryId}: {ex.Message}");
+                    // Do not throw - expiration succeeded even if notification fails
+                }
             }
         }
 
@@ -275,6 +307,28 @@ namespace Assignment2.LibraryManagement
             }
 
             entry.Status = "Accepted";
+
+            // Create notification for offer accepted
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == entry.ItemLibraryCode);
+                string itemName = item?.Name ?? entry.ItemLibraryCode;
+                string message = $"Your offer for '{itemName}' has been accepted. Please pick up the item at your earliest convenience.";
+
+                NotificationService.CreateNotification(
+                    borrowerId,
+                    message,
+                    "OfferAccepted",
+                    entry.ItemLibraryCode,
+                    null,
+                    waitlistEntryId
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Failed to create offer accepted notification: {ex.Message}");
+                // Do not throw - acceptance succeeded even if notification fails
+            }
         }
 
         /// <summary>

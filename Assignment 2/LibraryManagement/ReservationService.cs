@@ -252,6 +252,28 @@ namespace Assignment2.LibraryManagement
 
             // Update status
             reservation.Status = "Cancelled";
+
+            // Create notification for cancellation
+            try
+            {
+                var item = Item.AllItems.FirstOrDefault(i => i.LibraryCode == reservation.ItemLibraryCode);
+                string itemName = item?.Name ?? reservation.ItemLibraryCode;
+                string message = $"Your reservation for '{itemName}' has been cancelled.";
+
+                NotificationService.CreateNotification(
+                    requestingBorrowerId,
+                    message,
+                    "ReservationCancelled",
+                    reservation.ItemLibraryCode,
+                    reservationId,
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Failed to create cancellation notification: {ex.Message}");
+                // Do not throw - cancellation succeeded even if notification fails
+            }
         }
 
         /// <summary>
