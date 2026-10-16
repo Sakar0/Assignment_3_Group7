@@ -1,0 +1,199 @@
+@model Assignment2.LibraryManagement.Reservation
+@{
+    ViewData["Title"] = "Reservation Details";
+    var item = ViewBag.Item as Assignment2.LibraryManagement.Item;
+    var borrower = ViewBag.Borrower as Assignment2.LibraryManagement.Borrower;
+    var canCancel = (bool)(ViewBag.CanCancel ?? false);
+    var successMessage = TempData["SuccessMessage"] as string;
+    var errorMessage = TempData["ErrorMessage"] as string;
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <a href="@Url.Action("Index", new { borrowerId = Model.BorrowerId })" class="btn btn-outline-secondary mb-3">
+                ← Back to My Reservations
+            </a>
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @successMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @errorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">Reservation @Model.ReservationId</h4>
+                        <span class="badge bg-light text-dark fs-6">@Model.Status</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Borrower Information</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Borrower ID:</dt>
+                                <dd class="col-sm-8">@Model.BorrowerId</dd>
+
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">@(borrower?.Name ?? "Unknown")</dd>
+
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">@(borrower?.Email ?? "N/A")</dd>
+
+                                <dt class="col-sm-4">Phone:</dt>
+                                <dd class="col-sm-8">@(borrower?.Phone ?? "N/A")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Item Information</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Item Code:</dt>
+                                <dd class="col-sm-8">@Model.ItemLibraryCode</dd>
+
+                                <dt class="col-sm-4">Item Name:</dt>
+                                <dd class="col-sm-8">@(item?.Name ?? "Unknown Item")</dd>
+
+                                <dt class="col-sm-4">Current Status:</dt>
+                                <dd class="col-sm-8">
+                                    @if (item != null)
+                                    {
+                                        var statusBadge = item.Status switch
+                                        {
+                                            "Available" => "badge bg-success",
+                                            "Borrowed" => "badge bg-info",
+                                            "Damaged" => "badge bg-warning text-dark",
+                                            "Destroy" => "badge bg-danger",
+                                            _ => "badge bg-secondary"
+                                        };
+                                        <span class="@statusBadge">@item.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Unknown</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Item Description:</dt>
+                                <dd class="col-sm-8">@(item?.Description ?? "N/A")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h5 class="mb-3">Reservation History</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Reservation Date:</dt>
+                        <dd class="col-sm-8">@Model.ReservationDate.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var statusText = Model.Status switch
+                                {
+                                    "Pending" => "Your reservation is active and waiting for the item to become available.",
+                                    "Fulfilled" => "The item is now available for you to borrow. Your reservation has been fulfilled.",
+                                    "Cancelled" => "You cancelled this reservation.",
+                                    _ => "Status unknown."
+                                };
+                            }
+                            <span>@statusText</span>
+                        </dd>
+
+                        @if (Model.ExpiryDate.HasValue)
+                        {
+                            <dt class="col-sm-4">Expiry Date:</dt>
+                            <dd class="col-sm-8">@Model.ExpiryDate.Value.ToString("yyyy-MM-dd")</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            @if (canCancel)
+            {
+                <div class="card mt-3 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        Cancel This Reservation
+                    </div>
+                    <div class="card-body">
+                        <p>You can cancel this pending reservation. This action cannot be undone.</p>
+                        <form method="post" action="@Url.Action("Cancel", "Reservation")" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reservationId" value="@Model.ReservationId" />
+                            <input type="hidden" name="borrowerId" value="@Model.BorrowerId" />
+                            <button type="submit" class="btn btn-danger" 
+                                    onclick="return confirm('Are you sure you want to cancel this reservation?');">
+                                Cancel Reservation
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card mt-3 border-secondary">
+                    <div class="card-body text-muted">
+                        <p>This reservation cannot be cancelled as it is no longer in "Pending" status.</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Quick Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Status:</strong></p>
+                    <p>
+                        @{
+                            var badge = Model.Status switch
+                            {
+                                "Pending" => "badge bg-warning text-dark",
+                                "Fulfilled" => "badge bg-success",
+                                "Cancelled" => "badge bg-secondary",
+                                _ => "badge bg-info"
+                            };
+                        }
+                        <span class="@badge">@Model.Status</span>
+                    </p>
+
+                    <hr />
+
+                    <p><strong>What this means:</strong></p>
+                    <div class="alert alert-info">
+                        @if (Model.Status == "Pending")
+                        {
+                            <p class="mb-0">Your reservation is in the queue. You'll be notified when the item becomes available.</p>
+                        }
+                        else if (Model.Status == "Fulfilled")
+                        {
+                            <p class="mb-0">The item is available for you. Please proceed to borrow it from the library.</p>
+                        }
+                        else if (Model.Status == "Cancelled")
+                        {
+                            <p class="mb-0">This reservation has been cancelled and is no longer active.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>

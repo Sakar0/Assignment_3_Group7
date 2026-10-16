@@ -1,0 +1,71 @@
+@model List<Assignment2.LibraryManagement.Item>
+@{
+    ViewData["Title"] = "Join Waitlist";
+}
+
+<h1>Join a Waitlist</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <form method="post" action="@Url.Action("Join")" class="needs-validation">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label for="borrowerId" class="form-label">Borrower:</label>
+                <select name="borrowerId" id="borrowerId" class="form-select" required>
+                    <option value="">-- Select a Borrower --</option>
+                    @foreach (var borrower in (ViewBag.Borrowers as List<Assignment2.LibraryManagement.Borrower>))
+                    {
+                        <option value="@borrower.BorrowerId">@borrower.Name (@borrower.BorrowerId)</option>
+                    }
+                </select>
+                <div class="invalid-feedback">Please select a borrower.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="itemLibraryCode" class="form-label">Unavailable Item:</label>
+                <select name="itemLibraryCode" id="itemLibraryCode" class="form-select" required>
+                    <option value="">-- Select an Item --</option>
+                    @foreach (var item in Model)
+                    {
+                        <option value="@item.LibraryCode">@item.Name (@item.LibraryCode) - Status: @item.Status</option>
+                    }
+                </select>
+                <div class="invalid-feedback">Please select an item.</div>
+                @if (Model.Count == 0)
+                {
+                    <p class="text-info mt-2">All items are currently available. No waitlist needed.</p>
+                }
+            </div>
+
+            <div class="form-text mb-3">
+                <strong>Waitlist Rules:</strong>
+                <ul>
+                    <li>You can only join the waitlist for an unavailable item</li>
+                    <li>When the item becomes available, you will receive an offer (valid for 7 days)</li>
+                    <li>You must respond to the offer within the expiration time</li>
+                    <li>Accepted items must be picked up within 7 days</li>
+                </ul>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Join Waitlist</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

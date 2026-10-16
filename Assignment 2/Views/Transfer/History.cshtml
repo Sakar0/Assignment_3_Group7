@@ -1,0 +1,285 @@
+@model Assignment2.Controllers.TransferHistoryViewModel
+
+@{
+    ViewData["Title"] = "Transfer History";
+}
+
+<div class="container-fluid mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Inter-Branch Transfer History</h2>
+            <p class="text-muted">Complete record of all item transfers between library branches.</p>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Filter Controls -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Filter Transfers</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" asp-action="History" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="filterBranchId" class="form-label">By Branch:</label>
+                            <select id="filterBranchId" name="filterBranchId" class="form-select">
+                                <option value="">-- All Branches --</option>
+                                @foreach (var branch in Model.AllBranches)
+                                {
+                                    <option value="@branch.BranchId" selected="@(Model.SelectedBranchFilter == branch.BranchId)">
+                                        @branch.BranchName (@branch.BranchId)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="filterStatus" class="form-label">By Status:</label>
+                            <select id="filterStatus" name="filterStatus" class="form-select">
+                                <option value="">-- All Statuses --</option>
+                                <option value="Initiated" selected="@(Model.SelectedStatusFilter == "Initiated")">Initiated (Pending Approval)</option>
+                                <option value="Approved" selected="@(Model.SelectedStatusFilter == "Approved")">Approved (Ready for Transit)</option>
+                                <option value="InTransit" selected="@(Model.SelectedStatusFilter == "InTransit")">In Transit</option>
+                                <option value="Completed" selected="@(Model.SelectedStatusFilter == "Completed")">Completed</option>
+                                <option value="Rejected" selected="@(Model.SelectedStatusFilter == "Rejected")">Rejected</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Apply Filters
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if (Model.Transfers.Count == 0)
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    No transfers found matching the selected criteria.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="width: 80px;">Transfer ID</th>
+                                <th style="width: 150px;">Item</th>
+                                <th style="width: 120px;">Source</th>
+                                <th style="width: 120px;">Destination</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 120px;">Created</th>
+                                <th style="width: 120px;">Completed</th>
+                                <th style="width: 250px;">Notes</th>
+                                <th style="width: 150px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in Model.Transfers.OrderByDescending(t => t.Transfer.CreatedDate))
+                            {
+                                var statusClass = detail.Transfer.Status switch
+                                {
+                                    Assignment2.LibraryManagement.TransferStatus.Initiated => "bg-warning text-dark",
+                                    Assignment2.LibraryManagement.TransferStatus.Approved => "bg-info text-white",
+                                    Assignment2.LibraryManagement.TransferStatus.InTransit => "bg-primary text-white",
+                                    Assignment2.LibraryManagement.TransferStatus.Completed => "bg-success text-white",
+                                    Assignment2.LibraryManagement.TransferStatus.Rejected => "bg-danger text-white",
+                                    _ => "bg-secondary text-white"
+                                };
+
+                                <tr>
+                                    <td>
+                                        <strong class="text-primary">@detail.Transfer.TransferId</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small><strong>@detail.Item?.Name</strong></small><br />
+                                            <small class="text-muted">@detail.Item?.LibraryCode</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>@detail.SourceBranch?.BranchName</small><br />
+                                        <small class="text-muted">@detail.SourceBranch?.BranchId</small>
+                                    </td>
+                                    <td>
+                                        <small>@detail.DestinationBranch?.BranchName</small><br />
+                                        <small class="text-muted">@detail.DestinationBranch?.BranchId</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge @statusClass" title="@detail.Transfer.Status">
+                                            @detail.Transfer.Status.ToString()
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>@detail.Transfer.CreatedDate.ToString("MMM d, h:mm tt")</small>
+                                    </td>
+                                    <td>
+                                        @if (detail.Transfer.CompletedDate.HasValue)
+                                        {
+                                            <small>@detail.Transfer.CompletedDate.Value.ToString("MMM d, h:mm tt")</small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">Pending</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@detail.Transfer.Notes</small>
+                                    </td>
+                                    <td>
+                                        @if (detail.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Initiated)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                                    data-bs-target="#rejectModal_@detail.Transfer.TransferId">
+                                                <i class="bi bi-x-circle"></i> Reject
+                                            </button>
+
+                                            <!-- Reject Modal for Initiated Transfer -->
+                                            <div class="modal fade" id="rejectModal_@detail.Transfer.TransferId" tabindex="-1">
+                                                <div class="modal-dialog modal-sm">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning">
+                                                            <h5 class="modal-title">Reject Transfer</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form method="post" asp-action="RejectTransfer">
+                                                            @Html.AntiForgeryToken()
+                                                            <div class="modal-body">
+                                                                <p>Reject transfer <strong>@detail.Transfer.TransferId</strong>?</p>
+                                                                <textarea name="rejectionReason" class="form-control form-control-sm" rows="2" required></textarea>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                                                <input type="hidden" name="transferId" value="@detail.Transfer.TransferId" />
+                                                                <input type="hidden" name="rejectingBranchId" value="@detail.SourceBranch.BranchId" />
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (detail.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Approved)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                                    data-bs-target="#completeModal_@detail.Transfer.TransferId">
+                                                <i class="bi bi-check-circle"></i> Complete
+                                            </button>
+
+                                            <!-- Complete Modal for Approved Transfer -->
+                                            <div class="modal fade" id="completeModal_@detail.Transfer.TransferId" tabindex="-1">
+                                                <div class="modal-dialog modal-sm">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-success text-white">
+                                                            <h5 class="modal-title">Complete Transfer</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form method="post" asp-action="CompleteTransfer">
+                                                            @Html.AntiForgeryToken()
+                                                            <div class="modal-body">
+                                                                <p>Mark transfer <strong>@detail.Transfer.TransferId</strong> as complete?</p>
+                                                                <p class="text-info small"><i class="bi bi-info-circle"></i> Item location will be updated to @detail.DestinationBranch?.BranchName.</p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                                                                <input type="hidden" name="transferId" value="@detail.Transfer.TransferId" />
+                                                                <input type="hidden" name="completingBranchId" value="@detail.DestinationBranch.BranchId" />
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (detail.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Completed)
+                                        {
+                                            <span class="badge bg-success">✓ Complete</span>
+                                        }
+                                        else if (detail.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Rejected)
+                                        {
+                                            <span class="badge bg-danger">✗ Rejected</span>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">No actions</small>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <a href="@Url.Action("InitiateTransferForm", "Transfer")" class="btn btn-primary">
+                        <i class="bi bi-arrow-left-right"></i> Initiate New Transfer
+                    </a>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Showing @Model.Transfers.Count transfer(s)
+                    </small>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mt-5">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Initiated</h5>
+                            <h2 class="text-warning">@Model.Transfers.Count(t => t.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Initiated)</h2>
+                            <small class="text-muted">Pending approval</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Approved</h5>
+                            <h2 class="text-info">@Model.Transfers.Count(t => t.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Approved || t.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.InTransit)</h2>
+                            <small class="text-muted">In transit/ready</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Completed</h5>
+                            <h2 class="text-success">@Model.Transfers.Count(t => t.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Completed)</h2>
+                            <small class="text-muted">Delivered</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Rejected</h5>
+                            <h2 class="text-danger">@Model.Transfers.Count(t => t.Transfer.Status == Assignment2.LibraryManagement.TransferStatus.Rejected)</h2>
+                            <small class="text-muted">Cancelled</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,155 @@
+@model Assignment2.LibraryManagement.FineStatistics
+
+@{
+    ViewData["Title"] = "Fine & Overdue Analytics";
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <a href="/Analytics/Dashboard" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+    <h1 class="mb-4">
+        <i class="bi bi-cash-coin"></i> Fine & Overdue Analytics
+    </h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-success">
+                        <i class="bi bi-cash-coin"></i> Revenue & Fines
+                    </h5>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Total Fines Collected:</strong></td>
+                            <td class="text-end"><strong style="font-size: 1.3rem;">${@Model.TotalFinesCollected:F2}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Completed Borrow Transactions:</td>
+                            <td class="text-end">@Model.CompletedBorrowsCount</td>
+                        </tr>
+                        <tr>
+                            <td>Late Returns:</td>
+                            <td class="text-end">@Model.LateReturnCount</td>
+                        </tr>
+                        <tr>
+                            <td>Average Fine Per Item:</td>
+                            <td class="text-end"><strong>${@Model.AverageFine:F2}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Late Return Rate:</td>
+                            <td class="text-end">
+                                @(Model.CompletedBorrowsCount > 0 ? 
+                                    Math.Round((double)Model.LateReturnCount / Model.CompletedBorrowsCount * 100, 1) 
+                                    : 0)%
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card @(Model.TotalOverdueItems > 0 ? "border-danger" : "border-success")">
+                <div class="card-body">
+                    <h5 class="card-title @(Model.TotalOverdueItems > 0 ? "text-danger" : "text-success")">
+                        <i class="bi bi-exclamation-circle"></i> Current Overdue Status
+                    </h5>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Overdue Items (Still Borrowed):</strong></td>
+                            <td class="text-end">
+                                <strong style="font-size: 1.3rem; color: @(Model.TotalOverdueItems > 0 ? "#dc3545" : "#198754");">
+                                    @Model.TotalOverdueItems
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Current Overdue Amount:</td>
+                            <td class="text-end">
+                                <strong style="color: @(Model.CurrentOverdueAmount > 0 ? "#dc3545" : "#198754");">
+                                    $@Model.CurrentOverdueAmount:F2
+                                </strong>
+                            </td>
+                        </tr>
+                        @if (Model.TotalOverdueItems > 0)
+                        {
+                            <tr class="table-danger">
+                                <td colspan="2" class="text-center">
+                                    <small><strong>⚠️ Action Required</strong></small>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr class="table-success">
+                                <td colspan="2" class="text-center">
+                                    <small><strong>&check; No Overdue Items</strong></small>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Late Return Analysis</h5>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>On-Time Returns</span>
+                            <span class="badge bg-success">
+                                @(Model.CompletedBorrowsCount - Model.LateReturnCount) 
+                                (@(Model.CompletedBorrowsCount > 0 ? Math.Round((double)(Model.CompletedBorrowsCount - Model.LateReturnCount) / Model.CompletedBorrowsCount * 100, 1) : 0)%)
+                            </span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: @(Model.CompletedBorrowsCount > 0 ? Math.Round((double)(Model.CompletedBorrowsCount - Model.LateReturnCount) / Model.CompletedBorrowsCount * 100, 1) : 0)%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Late Returns</span>
+                            <span class="badge bg-danger">
+                                @Model.LateReturnCount 
+                                (@(Model.CompletedBorrowsCount > 0 ? Math.Round((double)Model.LateReturnCount / Model.CompletedBorrowsCount * 100, 1) : 0)%)
+                            </span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: @(Model.CompletedBorrowsCount > 0 ? Math.Round((double)Model.LateReturnCount / Model.CompletedBorrowsCount * 100, 1) : 0)%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Key Metrics</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <small class="text-muted">Recovery Rate</small><br>
+                            <strong style="font-size: 1.2rem;">
+                                $@(Model.CompletedBorrowsCount > 0 ? (Model.TotalFinesCollected / Model.CompletedBorrowsCount).ToString("F2") : "0.00") per item
+                            </strong>
+                        </li>
+                        <li class="mb-3">
+                            <small class="text-muted">Compliance</small><br>
+                            <strong style="font-size: 1.2rem;">
+                                @(Model.CompletedBorrowsCount > 0 ? 
+                                    Math.Round((double)(Model.CompletedBorrowsCount - Model.LateReturnCount) / Model.CompletedBorrowsCount * 100, 1) 
+                                    : 100)% on-time
+                            </strong>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

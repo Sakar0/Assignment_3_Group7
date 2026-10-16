@@ -1,0 +1,90 @@
+@model Assignment2.Controllers.BranchViewModel
+
+@{
+    ViewData["Title"] = "Create Branch";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Create New Library Branch</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="@Url.Action("Create")">
+                        @Html.AntiForgeryToken()
+
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <h5>Validation Error</h5>
+                                <ul>
+                                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="BranchId" class="form-label">Branch ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @(ViewData.ModelState.ContainsKey("BranchId") && ViewData.ModelState["BranchId"].Errors.Any() ? "is-invalid" : "")" 
+                                   id="BranchId" name="BranchId" placeholder="e.g., BR001, BR002" 
+                                   value="@Model?.BranchId" required maxlength="50">
+                            <small class="form-text text-muted">Unique identifier for this branch</small>
+                            @if (ViewData.ModelState.ContainsKey("BranchId") && ViewData.ModelState["BranchId"].Errors.Any())
+                            {
+                                <div class="invalid-feedback d-block">
+                                    @ViewData.ModelState["BranchId"].Errors.First().ErrorMessage
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="BranchName" class="form-label">Branch Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @(ViewData.ModelState.ContainsKey("BranchName") && ViewData.ModelState["BranchName"].Errors.Any() ? "is-invalid" : "")" 
+                                   id="BranchName" name="BranchName" placeholder="e.g., Downtown Library, Campus Branch" 
+                                   value="@Model?.BranchName" required maxlength="200">
+                            <small class="form-text text-muted">Descriptive name of the branch</small>
+                            @if (ViewData.ModelState.ContainsKey("BranchName") && ViewData.ModelState["BranchName"].Errors.Any())
+                            {
+                                <div class="invalid-feedback d-block">
+                                    @ViewData.ModelState["BranchName"].Errors.First().ErrorMessage
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Location" class="form-label">Location <span class="text-danger">*</span></label>
+                            <textarea class="form-control @(ViewData.ModelState.ContainsKey("Location") && ViewData.ModelState["Location"].Errors.Any() ? "is-invalid" : "")" 
+                                      id="Location" name="Location" rows="4" placeholder="Full address, contact info, and hours" 
+                                      required maxlength="500">@Model?.Location</textarea>
+                            <small class="form-text text-muted">Physical address, phone number, and operating hours</small>
+                            @if (ViewData.ModelState.ContainsKey("Location") && ViewData.ModelState["Location"].Errors.Any())
+                            {
+                                <div class="invalid-feedback d-block">
+                                    @ViewData.ModelState["Location"].Errors.First().ErrorMessage
+                                </div>
+                            }
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Create Branch</button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 10px;
+    }
+</style>

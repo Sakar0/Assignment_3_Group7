@@ -1,0 +1,137 @@
+@model Assignment2.Controllers.InitiateTransferViewModel
+
+@{
+    ViewData["Title"] = "Initiate Transfer";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>Initiate Item Transfer Between Branches</h2>
+            <p class="text-muted">Create a new transfer request to move an item from one branch to another.</p>
+
+            <form method="post" asp-action="InitiateTransferForm" role="form">
+                @Html.AntiForgeryToken()
+
+                @if (ViewData.ModelState.IsValid == false)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong>
+                        @Html.ValidationSummary(false)
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Transfer Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Source Branch Selection -->
+                        <div class="mb-3">
+                            <label for="sourceBranchId" class="form-label">Source Branch (Where item is now):</label>
+                            <select id="sourceBranchId" name="sourceBranchId" class="form-select" required onchange="updateItemsList()">
+                                <option value="">-- Select source branch --</option>
+                                @foreach (var branch in Model.Branches)
+                                {
+                                    <option value="@branch.BranchId">
+                                        @branch.BranchName (@branch.BranchId)
+                                    </option>
+                                }
+                            </select>
+                            <small class="form-text text-muted">The branch where the item is currently located.</small>
+                        </div>
+
+                        <!-- Item Selection -->
+                        <div class="mb-3">
+                            <label for="selectedItemId" class="form-label">Item to Transfer:</label>
+                            <select id="selectedItemId" name="selectedItemId" class="form-select" required>
+                                <option value="">-- Select item --</option>
+                                @foreach (var item in Model.AvailableItems.OrderBy(i => i.Name))
+                                {
+                                    <option value="@item.LibraryCode" data-branch="@item.BranchId">
+                                        @item.Name - @item.LibraryCode (Branch: @item.BranchId)
+                                    </option>
+                                }
+                            </select>
+                            <small class="form-text text-muted">
+                                Only items from the selected source branch will be available.
+                            </small>
+                            @if (ViewData.ModelState["SelectedItemId"] != null && ViewData.ModelState["SelectedItemId"].Errors.Count > 0)
+                            {
+                                <div class="text-danger small">
+                                    @Html.ValidationMessage("SelectedItemId")
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Destination Branch Selection -->
+                        <div class="mb-3">
+                            <label for="destinationBranchId" class="form-label">Destination Branch (Where item should go):</label>
+                            <select id="destinationBranchId" name="destinationBranchId" class="form-select" required>
+                                <option value="">-- Select destination branch --</option>
+                                @foreach (var branch in Model.Branches)
+                                {
+                                    <option value="@branch.BranchId">
+                                        @branch.BranchName (@branch.BranchId)
+                                    </option>
+                                }
+                            </select>
+                            <small class="form-text text-muted">Must be different from source branch.</small>
+                            @if (ViewData.ModelState["DestinationBranchId"] != null && ViewData.ModelState["DestinationBranchId"].Errors.Count > 0)
+                            {
+                                <div class="text-danger small">
+                                    @Html.ValidationMessage("DestinationBranchId")
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Transfer Notes (Optional):</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="e.g., 'High demand at Campus', 'Balancing collections'"></textarea>
+                            <small class="form-text text-muted">Add a reason or special instructions for this transfer.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-arrow-left-right"></i> Create Transfer
+                    </button>
+                    <a href="@Url.Action("History", "Transfer")" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+
+            <div class="alert alert-info mt-4">
+                <h6>Transfer Workflow:</h6>
+                <ol class="mb-0">
+                    <li><strong>Initiated:</strong> Transfer created, awaiting approval by destination branch</li>
+                    <li><strong>Approved:</strong> Destination branch approved; item ready for shipment</li>
+                    <li><strong>Completed:</strong> Item received at destination; location updated</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateItemsList() {
+        const sourceBranch = document.getElementById('sourceBranchId').value;
+        const itemSelect = document.getElementById('selectedItemId');
+
+        // Show/hide items based on source branch selection
+        Array.from(itemSelect.options).forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+            } else {
+                option.style.display = (option.dataset.branch === sourceBranch) ? 'block' : 'none';
+            }
+        });
+
+        // Reset selection if current item doesn't match branch
+        if (itemSelect.value && document.querySelector(`option[value="${itemSelect.value}"]`).style.display === 'none') {
+            itemSelect.value = '';
+        }
+    }
+</script>

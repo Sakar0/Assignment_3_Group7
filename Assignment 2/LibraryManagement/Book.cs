@@ -2,7 +2,7 @@ namespace Assignment2.LibraryManagement
 {
     /// <summary>
     /// Book class - a type of item in the library
-    /// Inherits from Item (gets Name, Description, LibraryCode, Status)
+    /// Inherits from Item (gets Name, Description, LibraryCode, Status, BranchId)
     /// Adds book-specific properties: Author and Genre
     /// </summary>
     public class Book : Item
@@ -15,8 +15,8 @@ namespace Assignment2.LibraryManagement
         /// Parameters are passed to the Item base class, then Author and Genre are set
         /// </summary>
         public Book(string name, string description, string libraryCode, string status, 
-                    string author, string genre)
-            : base(name, description, libraryCode, status)
+                    string author, string genre, string branchId = "DEFAULT")
+            : base(name, description, libraryCode, status, branchId)
         {
             Author = author;
             Genre = genre;

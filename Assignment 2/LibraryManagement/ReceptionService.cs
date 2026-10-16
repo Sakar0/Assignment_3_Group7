@@ -213,6 +213,7 @@ namespace Assignment2.LibraryManagement
 
         /// <summary>
         /// Returns an item: updates item status to "Available", sets return date, and calculates fine
+        /// Also processes the waitlist queue if anyone is waiting for the item
         /// </summary>
         public bool ReturnItem(string libraryCode)
         {
@@ -249,6 +250,17 @@ namespace Assignment2.LibraryManagement
                 else
                 {
                     Console.WriteLine($"  No fine. Item returned within 14 days.");
+                }
+
+                // Process waitlist queue for this item
+                try
+                {
+                    WaitlistService.ProcessQueue(libraryCode);
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't fail the return if waitlist processing has issues
+                    Console.WriteLine($"  Note: Waitlist processing encountered an issue: {ex.Message}");
                 }
 
                 return true;

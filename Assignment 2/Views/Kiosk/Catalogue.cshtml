@@ -1,0 +1,153 @@
+@model List<Assignment2.LibraryManagement.Item>
+
+@{
+    ViewData["Title"] = "Kiosk - Browse Catalogue";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 mb-2">
+                <i class="bi bi-collection me-2 text-primary"></i> Browse the Catalogue
+            </h1>
+            <p class="text-muted lead">Tap an item to see details and availability</p>
+        </div>
+    </div>
+
+    <!-- Feedback banner -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form method="get" action="@Url.Action("Catalogue", "Kiosk")" class="row g-3">
+                        <div class="col-12 col-md-6 col-lg-5">
+                            <label for="searchName" class="form-label fw-bold">Item Name</label>
+                            <input type="text" class="form-control form-control-lg" id="searchName" name="searchName"
+                                   placeholder="Search by title or name..." value="@ViewBag.SearchName" autocomplete="off">
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <label for="searchType" class="form-label fw-bold">Item Type</label>
+                            <select class="form-select form-select-lg" id="searchType" name="searchType">
+                                <option value="">-- All Types --</option>
+                                @foreach (var t in (List<string>)ViewBag.Types)
+                                {
+                                    if (ViewBag.SearchType == t)
+                                    {
+                                        <option value="@t" selected>@t</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-lg-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-search me-2"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    @if (Model != null && Model.Count > 0)
+    {
+        <p class="text-muted mb-3">@ViewBag.ResultCount item(s) found</p>
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge @GetTypeClass(item) fs-6">@GetItemType(item)</span>
+                                <span class="badge @GetStatusClass(item.Status) fs-6">@item.Status</span>
+                            </div>
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="card-text text-muted small">@item.Description</p>
+                            <p class="mb-0"><small class="text-muted">Code:</small> <code>@item.LibraryCode</code></p>
+                        </div>
+                        <div class="card-footer bg-light border-top d-grid">
+                            <a href="@Url.Action("Item", "Kiosk", new { code = item.LibraryCode })"
+                               class="btn btn-outline-primary stretched-link">
+                                <i class="bi bi-info-circle me-1"></i> Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h4 class="mt-4 text-muted">No items found</h4>
+            <p class="text-muted mb-4">Try adjusting your search</p>
+            <a href="@Url.Action("Catalogue", "Kiosk")" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-arrow-clockwise me-2"></i> Clear Search
+            </a>
+        </div>
+    }
+
+    <!-- Back to kiosk home -->
+    <div class="mt-4">
+        <a href="@Url.Action("Index", "Kiosk")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Kiosk Home
+        </a>
+    </div>
+</div>
+
+@functions {
+    private string GetItemType(Assignment2.LibraryManagement.Item item)
+    {
+        if (item is Assignment2.LibraryManagement.Book) return "Book";
+        if (item is Assignment2.LibraryManagement.Music) return "Music";
+        if (item is Assignment2.LibraryManagement.Toy) return "Toy";
+        return "Unknown";
+    }
+
+    private string GetTypeClass(Assignment2.LibraryManagement.Item item)
+    {
+        return GetItemType(item) switch
+        {
+            "Book" => "bg-primary",
+            "Music" => "bg-success",
+            "Toy" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Available" => "bg-success",
+            "Borrowed" => "bg-warning text-dark",
+            "Damaged" => "bg-danger",
+            "Destroy" => "bg-secondary",
+            _ => "bg-info"
+        };
+    }
+}

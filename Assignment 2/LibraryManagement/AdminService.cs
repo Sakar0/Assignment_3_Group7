@@ -90,6 +90,84 @@ namespace Assignment2.LibraryManagement
         }
 
         /// <summary>
+        /// Creates and adds a new Book to the library with specified branch
+        /// </summary>
+        public bool CreateBook(string name, string description, string libraryCode, string status, 
+                               string author, string genre, string branchId)
+        {
+            try
+            {
+                if (LibraryCodeExists(libraryCode))
+                {
+                    Console.WriteLine($"Error: LibraryCode '{libraryCode}' already exists.");
+                    return false;
+                }
+
+                Book book = new Book(name, description, libraryCode, status, author, genre, branchId);
+                Item.AllItems.Add(book);
+                Console.WriteLine($"✓ Book '{name}' created successfully with code '{libraryCode}' at branch '{branchId}'.");
+                return true;
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Error creating book: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Creates and adds a new Music item to the library with specified branch
+        /// </summary>
+        public bool CreateMusic(string name, string description, string libraryCode, string status, 
+                                string artist, int year, string branchId)
+        {
+            try
+            {
+                if (LibraryCodeExists(libraryCode))
+                {
+                    Console.WriteLine($"Error: LibraryCode '{libraryCode}' already exists.");
+                    return false;
+                }
+
+                Music music = new Music(name, description, libraryCode, status, artist, year, branchId);
+                Item.AllItems.Add(music);
+                Console.WriteLine($"✓ Music '{name}' created successfully with code '{libraryCode}' at branch '{branchId}'.");
+                return true;
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Error creating music: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Creates and adds a new Toy to the library with specified branch
+        /// </summary>
+        public bool CreateToy(string name, string description, string libraryCode, string status, 
+                              string type, string ageGroup, string branchId)
+        {
+            try
+            {
+                if (LibraryCodeExists(libraryCode))
+                {
+                    Console.WriteLine($"Error: LibraryCode '{libraryCode}' already exists.");
+                    return false;
+                }
+
+                Toy toy = new Toy(name, description, libraryCode, status, type, ageGroup, branchId);
+                Item.AllItems.Add(toy);
+                Console.WriteLine($"✓ Toy '{name}' created successfully with code '{libraryCode}' at branch '{branchId}'.");
+                return true;
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Error creating toy: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Finds an item by LibraryCode
         /// </summary>
         public Item FindByLibraryCode(string libraryCode)

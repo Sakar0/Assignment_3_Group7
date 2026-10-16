@@ -196,6 +196,14 @@
                                 </span>
                             </div>
 
+                            <!-- Branch Location -->
+                            <div class="mb-3 pb-3 border-bottom">
+                                <small class="text-muted d-block fw-bold">Branch Location</small>
+                                <span class="badge bg-info fs-6 px-3 py-2">
+                                    @GetBranchName(item.BranchId)
+                                </span>
+                            </div>
+
                             <!-- Type-Specific Details -->
                             @if (item is Assignment2.LibraryManagement.Book book)
                             {
@@ -292,6 +300,20 @@
             "Destroy" => "bg-secondary",
             _ => "bg-info"
         };
+    }
+
+    private string GetBranchName(string branchId)
+    {
+        // Look up branch name from LibraryBranch.AllBranches
+        var branch = Assignment2.LibraryManagement.LibraryBranch.AllBranches
+            .FirstOrDefault(b => b.BranchId == branchId);
+
+        if (branch != null)
+        {
+            return $"{branch.BranchName} ({branchId})";
+        }
+
+        return branchId ?? "Unknown Branch";
     }
 }
 

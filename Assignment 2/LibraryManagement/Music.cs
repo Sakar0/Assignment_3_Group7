@@ -2,7 +2,7 @@ namespace Assignment2.LibraryManagement
 {
     /// <summary>
     /// Music class - a type of item in the library
-    /// Inherits from Item (gets Name, Description, LibraryCode, Status)
+    /// Inherits from Item (gets Name, Description, LibraryCode, Status, BranchId)
     /// Adds music-specific properties: Artist and Year
     /// </summary>
     public class Music : Item
@@ -15,8 +15,8 @@ namespace Assignment2.LibraryManagement
         /// Parameters are passed to the Item base class, then Artist and Year are set
         /// </summary>
         public Music(string name, string description, string libraryCode, string status, 
-                     string artist, int year)
-            : base(name, description, libraryCode, status)
+                     string artist, int year, string branchId = "DEFAULT")
+            : base(name, description, libraryCode, status, branchId)
         {
             Artist = artist;
             Year = year;
